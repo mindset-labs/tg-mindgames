@@ -1,21 +1,41 @@
 use cosmwasm_schema::cw_serde;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use cosmwasm_std::{to_json_binary, Addr, Binary, CosmosMsg, StdResult, Uint128, WasmMsg};
+use cosmwasm_std::{Addr, Uint128};
 use cw_storage_plus::{Item, Map};
 
 pub const OWNER: Item<String> = Item::new("owner");
 pub const NAME: Item<String> = Item::new("name");
-pub const GAMES: Map<Uint128, Game> = Item::new("games");
+pub const GAMES: Map<u64, Game> = Map::new("games");
+pub const LEADERBOARD: Map<Addr, Uint128> = Map::new("leaderboard"); // (player, total_rewards_achieved)
 
-
-// pub const SYMBOL: Item<String> = Item::new("symbol");
-// pub const BASE_TOKEN_URI: Item<String> = Item::new("base_token_uri");
-// pub const DECIMALS: Item<u8> = Item::new("decimals");
-// pub const TOTAL_SUPPLY: Item<Uint128> = Item::new("total_supply");
-// pub const MINTED: Item<Uint128> = Item::new("minted");
-// pub const WHITELIST: Map<String, bool> = Map::new("whitelist");
-
+#[cw_serde]
 pub struct Game {
-    
+    pub id: u64,
+    pub players: Vec<(Addr, Uint128)>, // (player, deposit)
+    pub rounds: Vec<GameRound>,
+    pub current_round: u8,
+    pub status: GameStatus,
+    pub game_config: GameConfig,
+}
+
+#[cw_serde]
+pub struct GameRound {
+    pub id: u8,
+    pub expires_at: u64,
+    // TODO: add other round data
+}
+
+#[cw_serde]
+pub enum GameStatus {
+    Created,
+    Started,
+    Ended,
+}
+
+#[cw_serde]
+pub struct GameConfig {
+    pub min_deposit: Uint128,
+    pub max_players: u8,
+    pub round_expiry_duration: u64,
+    pub max_rounds: u8,
+    pub round_reward_multiplier: Option<u64>,
 }
