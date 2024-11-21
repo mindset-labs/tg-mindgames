@@ -288,11 +288,6 @@ pub fn reveal_round(
         .add_attribute("player", info.sender.clone().to_string()))
 }
 
-// Internal method to settle rewards for a game
-fn _settle_rewards(storage: &mut dyn Storage, game: &mut Game) -> Result<Response, ContractError> {
-    unimplemented!()
-}
-
 // Ends the game by updating its state
 pub fn end_game(deps: DepsMut, info: MessageInfo, game_id: u64) -> Result<Response, ContractError> {
     let is_admin = ADMINS.load(deps.storage)?.contains(&info.sender)
@@ -304,7 +299,6 @@ pub fn end_game(deps: DepsMut, info: MessageInfo, game_id: u64) -> Result<Respon
         // admin can end the game at any time or if rounds are finished
         (GameStatus::RoundsFinished, _) | (_, true) => {
             game.status = GameStatus::Ended;
-            _settle_rewards(deps.storage, &mut game)?;
             GAMES.save(deps.storage, game_id, &game)?;
         }
         _ => {
