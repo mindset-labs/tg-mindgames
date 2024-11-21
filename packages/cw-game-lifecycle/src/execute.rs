@@ -1,29 +1,19 @@
 use crate::error::ContractError;
-use crate::state::GameConfig;
+use crate::state::{GameConfig, GAME_ID_COUNTER};
 use crate::state::{Game, GameStatus, GAMES};
-use cosmwasm_std::{Addr, DepsMut, Env, MessageInfo, Response, Uint128};
+use cosmwasm_std::{Addr, DepsMut, MessageInfo, Response, Uint128};
 
+// Creates a new game with the given config.
 pub fn create_game(
     deps: DepsMut,
-    _env: Env,
     info: MessageInfo,
     config: GameConfig,
 ) -> Result<Response, ContractError> {
-    let game_id = GAMES
-        .keys(deps.storage, None, None, cosmwasm_std::Order::Descending)
-        .next()
-        .map(|r| r.unwrap() + 1)
-        .unwrap_or(0);
+    // Increment the game ID counter and use current value as the new game ID
+    let game_id = GAME_ID_COUNTER.load(deps.storage)?;
+    GAME_ID_COUNTER.save(deps.storage, &(game_id + 1))?;
 
-    let game = Game {
-        id: game_id,
-        players: vec![(info.sender, String::new(), Uint128::zero())],
-        rounds: vec![],
-        current_round: 0,
-        status: GameStatus::Created,
-        game_config: config,
-    };
-
+    let game = Game::new(game_id, config, info.sender);
     GAMES.save(deps.storage, game_id, &game)?;
 
     Ok(Response::new()
@@ -33,9 +23,8 @@ pub fn create_game(
 
 pub fn join_game(
     deps: DepsMut,
-    game_id: u64,
-    _env: Env,
     info: MessageInfo,
+    game_id: u64,
     telegram_id: String,
 ) -> Result<Response, ContractError> {
     let mut game = GAMES.load(deps.storage, game_id)?;
@@ -45,7 +34,7 @@ pub fn join_game(
     Ok(Response::new())
 }
 
-pub fn start_game(deps: DepsMut, game_id: u64) -> Result<Response, ContractError> {
+pub fn start_game(deps: DepsMut, info: MessageInfo, game_id: u64) -> Result<Response, ContractError> {
     let mut game = GAMES.load(deps.storage, game_id)?;
     game.status = GameStatus::InProgress;
     GAMES.save(deps.storage, game_id, &game)?;

@@ -4,6 +4,7 @@ use cw_storage_plus::{Item, Map};
 
 pub const OWNER: Item<String> = Item::new("owner");
 pub const NAME: Item<String> = Item::new("name");
+pub const GAME_ID_COUNTER: Item<u64> = Item::new("game_id_counter");
 pub const GAME_METADATA: Item<GameMetadata> = Item::new("game_metadata");
 pub const GAMES: Map<u64, Game> = Map::new("games"); // (Game ID, Game)
 pub const LEADERBOARD: Map<String, (Addr, Uint128)> = Map::new("leaderboard"); // (Telegram_id, (address, total_rewards_achieved))
@@ -22,6 +23,7 @@ pub struct Game {
     pub current_round: u8,
     pub status: GameStatus,
     pub game_config: GameConfig,
+    pub creator: Addr,
 }
 
 #[cw_serde]

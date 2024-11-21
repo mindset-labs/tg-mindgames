@@ -9,7 +9,7 @@ use crate::execute::{
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::query::{get_current_round, get_game_by_id, get_game_status, get_leaderboard};
-use crate::state::{GameConfig, GameMetadata, GAME_METADATA};
+use crate::state::{GameConfig, GameMetadata, GAME_ID_COUNTER, GAME_METADATA};
 
 /*
 // version info for migration info
@@ -32,24 +32,22 @@ pub fn instantiate(
         },
     )?;
 
+    GAME_ID_COUNTER.save(deps.storage, &0)?;
+
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
+    env: Env,
+    info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::CreateGame { config } => create_game(deps, config),
-
-        ExecuteMsg::JoinGame {
-            game_id,
-            telegram_id,
-        } => join_game(deps, game_id, telegram_id),
-        ExecuteMsg::StartGame { game_id } => start_game(deps, game_id),
+        ExecuteMsg::CreateGame { config } => create_game(deps, info, config),
+        ExecuteMsg::JoinGame { game_id, telegram_id } => join_game(deps, info, game_id, telegram_id),
+        ExecuteMsg::StartGame { game_id } => start_game(deps, info, game_id),
         ExecuteMsg::CommitRound { value, amount } => commit_round(deps, value, amount),
         ExecuteMsg::RevealRound { value, nonce } => reveal_round(deps, value, nonce),
         ExecuteMsg::CommitRoundAsAdmin {
