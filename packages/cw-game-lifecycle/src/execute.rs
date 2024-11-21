@@ -141,9 +141,22 @@ pub fn reveal_round(
     value: String,
     nonce: u64,
 ) -> Result<Response, ContractError> {
+    // TODO:
+    //  * check round status (must be valid - all players must have committed to begin revealing)
+    //  * find the players commit for the round
+    //  * hash(value, nonce) and compare it with the committed value
+    //      * if they match, update the round reveal set
+    //      * if not, return an error
+    //  * if all the players revealed, calculate the winner and update the round / game state accordingly
     unimplemented!()
 }
 
+// Ends the game by updating its state
 pub fn end_game(deps: DepsMut, game_id: u64) -> Result<Response, ContractError> {
+    // TODO:
+    //  * check if the game can be ended (must be in progress and max rounds, if set, is reached)
+    //  * update the game state accordingly
+    //  * issue rewards to the winners and burn the remaining pot
+
     unimplemented!()
 }
