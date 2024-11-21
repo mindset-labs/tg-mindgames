@@ -244,8 +244,11 @@ pub fn reveal_round(
         .find(|r| r.id == game.current_round)
         .ok_or(ContractError::RoundNotFound { game_id, round: game.current_round })?;
 
-    // Not all players committed and the round has not expired
-    if round.status != GameRoundStatus::Committed && round.expires_at.unwrap_or(u64::MAX) > env.block.height {
+    // Not all players committed and the round has not expired 
+    // and reveal is not skippable (i.e. all players must commit before a reveal can be made)
+    if round.status != GameRoundStatus::Committed && 
+        round.expires_at.unwrap_or(u64::MAX) > env.block.height &&
+        !game.config.skip_reveal {
         return Err(ContractError::RoundNotCommitted { game_id, round: round.id });
     }
 
@@ -288,11 +291,6 @@ pub fn reveal_round(
         .add_attribute("player", info.sender.clone().to_string()))
 }
 
-// Internal method to settle rewards for a game
-fn _settle_rewards(storage: &mut dyn Storage, game: &mut Game) -> Result<Response, ContractError> {
-    unimplemented!()
-}
-
 // Ends the game by updating its state
 pub fn end_game(deps: DepsMut, info: MessageInfo, game_id: u64) -> Result<Response, ContractError> {
     let is_admin = ADMINS.load(deps.storage)?.contains(&info.sender)
@@ -304,7 +302,6 @@ pub fn end_game(deps: DepsMut, info: MessageInfo, game_id: u64) -> Result<Respon
         // admin can end the game at any time or if rounds are finished
         (GameStatus::RoundsFinished, _) | (_, true) => {
             game.status = GameStatus::Ended;
-            _settle_rewards(deps.storage, &mut game)?;
             GAMES.save(deps.storage, game_id, &game)?;
         }
         _ => {

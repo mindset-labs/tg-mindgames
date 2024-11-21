@@ -42,6 +42,21 @@ impl Game {
     }
 }
 
+/// Trait for calculating winners and distributing rewards in a game.
+/// 
+/// # Implementation Requirements
+/// 
+/// Implementors must:
+/// - Calculate winners based on game-specific rules
+/// - Determine reward distribution among winners
+/// - Update relevant game state with results
+pub trait GameRewards {
+    type Score: Into<Uint128>;
+
+    /// Calculates winners and their corresponding rewards for the game
+    fn calculate_winners_and_rewards(&mut self) -> StdResult<()>;
+}
+
 impl Default for GameConfig {
     fn default() -> Self {
         Self {
