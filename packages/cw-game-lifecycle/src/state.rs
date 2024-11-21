@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Uint128};
+use cosmwasm_std::{Addr, Coin, Uint128};
 use cw_storage_plus::{Item, Map};
 
 pub const OWNER: Item<Addr> = Item::new("owner");
@@ -9,6 +9,7 @@ pub const GAME_ID_COUNTER: Item<u64> = Item::new("game_id_counter");
 pub const GAME_METADATA: Item<GameMetadata> = Item::new("game_metadata");
 pub const GAMES: Map<u64, Game> = Map::new("games"); // (Game ID, Game)
 pub const LEADERBOARD: Map<String, (Addr, Uint128)> = Map::new("leaderboard"); // (Telegram_id, (address, total_rewards_achieved))
+pub const ESCROW: Map<(u64, Addr), Coin> = Map::new("escrow"); // (Game ID, Player Address, Escrowed Funds)
 
 #[cw_serde]
 pub struct GameMetadata {
@@ -19,12 +20,13 @@ pub struct GameMetadata {
 #[cw_serde]
 pub struct Game {
     pub id: u64,
-    pub players: Vec<(Addr, String, Uint128)>, // (player, telegram ID, deposit)
+    pub players: Vec<(Addr, String)>, // (player, telegram ID)
     pub rounds: Vec<GameRound>,
     pub current_round: u8,
     pub status: GameStatus,
     pub config: GameConfig,
     pub creator: Addr,
+    pub total_escrow: Coin, // Total escrowed funds for this game
 }
 
 #[cw_serde]
@@ -37,15 +39,15 @@ pub struct GameRound {
 
 #[cw_serde]
 pub enum GameStatus {
-    Created,    // PLayer 1 has joined and staked
-    Ready,      // PLayer 2 has joined and staked
+    Created,    // Player 1 has joined and staked
+    Ready,      // Player 2 has joined and staked
     InProgress, // Rounds is in progress
     Ended,      // Rewards has been distributed
 }
 
 #[cw_serde]
 pub struct GameConfig {
-    pub min_deposit: Uint128,
+    pub min_deposit: Coin, // Changed to Coin to represent native Coreum token
     pub max_players: Option<u8>,
     pub min_players: u8,
     pub round_expiry_duration: u64, //in Blocks

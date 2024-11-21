@@ -10,10 +10,18 @@ pub fn create_game(
     config: GameConfig,
 ) -> Result<Response, ContractError> {
     // Increment the game ID counter and use current value as the new game ID
+
     let game_id = GAME_ID_COUNTER.load(deps.storage)?;
     GAME_ID_COUNTER.save(deps.storage, &(game_id + 1))?;
 
     let game = Game::new(game_id, config, info.sender);
+
+    //TODO: take user deposit and put it in escrow
+
+    //TODO: check what currency is used for the deposit
+    //       * if it's not the native token $COREUM, we need to check if the cw20 token contract is whitelisted
+    //       * if it's not whitelisted, return an error
+
     GAMES.save(deps.storage, game_id, &game)?;
 
     Ok(Response::new()
@@ -46,6 +54,7 @@ pub fn join_game(
 
     // TODO: handle player joining fee by reading `game.config.min_deposit`
     //         * should lock a certain amount of the player's funds if `min_deposit` is greater than 0
+    //         *
     //         * should create an allowance for the game contract to spend some amount of the player's (locked) funds
     //         * this can be done by calling `lock_funds` and `increase_allowance` on the cw20 token contract from here
     //         * this contract will be whitelisted on the cw20 token contract as a minter / admin / spender
@@ -80,7 +89,8 @@ pub fn start_game(
 
     game.status = GameStatus::InProgress;
     game.current_round = 1;
-    game.rounds.push(GameRound::new(1, game.config.round_expiry_duration));
+    game.rounds
+        .push(GameRound::new(1, game.config.round_expiry_duration));
 
     GAMES.save(deps.storage, game_id, &game)?;
 
@@ -126,7 +136,9 @@ pub fn commit_round_as_admin(
     value: String,
     amount: Option<Uint128>,
 ) -> Result<Response, ContractError> {
-    if !ADMINS.load(deps.storage)?.contains(&info.sender) && OWNER.load(deps.storage)? != info.sender {
+    if !ADMINS.load(deps.storage)?.contains(&info.sender)
+        && OWNER.load(deps.storage)? != info.sender
+    {
         return Err(ContractError::Unauthorized {});
     }
 
