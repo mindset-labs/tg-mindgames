@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -51,10 +53,11 @@ impl Game {
 /// - Determine reward distribution among winners
 /// - Update relevant game state with results
 pub trait GameRewards {
-    type Score: Into<Uint128>;
+    type Scores: Into<HashMap<Addr, u64>>;
+    type Rewards: Into<HashMap<Addr, Uint128>>;
 
     /// Calculates winners and their corresponding rewards for the game
-    fn calculate_winners_and_rewards(&mut self) -> StdResult<()>;
+    fn calculate_winners_and_rewards(&mut self) -> StdResult<(Self::Scores, Self::Rewards)>;
 }
 
 impl Default for GameConfig {
