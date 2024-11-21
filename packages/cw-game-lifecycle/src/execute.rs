@@ -89,16 +89,24 @@ pub fn start_game(
         .add_attribute("game_id", game_id.to_string()))
 }
 
-pub fn _commit_round(
+// Internal method to commit a round to the game as a player or an admin
+fn _commit_round(
     deps: DepsMut,
     game_id: u64,
     player: Addr,
     value: String,
     amount: Option<Uint128>,
 ) -> Result<Response, ContractError> {
+    // TODO:
+    //  * check if the player is in the game, if not, do some state updates just to charge them funds (👹)
+    //  * check round status (must be valid)
+    //  * check if the round has already been committed by the player
+    //  * commit the round
+
     unimplemented!()
 }
 
+// Commits a round to the game as a player
 pub fn commit_round(
     deps: DepsMut,
     info: MessageInfo,
@@ -109,6 +117,7 @@ pub fn commit_round(
     _commit_round(deps, game_id, info.sender, value, amount)
 }
 
+// Commits a round to the game as an admin
 pub fn commit_round_as_admin(
     deps: DepsMut,
     info: MessageInfo,
@@ -124,6 +133,7 @@ pub fn commit_round_as_admin(
     _commit_round(deps, game_id, player, value, amount)
 }
 
+// Reveals a round by a player
 pub fn reveal_round(
     deps: DepsMut,
     info: MessageInfo,
