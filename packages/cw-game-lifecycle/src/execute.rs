@@ -123,7 +123,7 @@ pub fn join_game(
 // Starts the game by updating its state and creating the first round
 pub fn start_game(
     deps: DepsMut,
-    info: MessageInfo,
+    _info: MessageInfo,
     game_id: u64,
 ) -> Result<Response, ContractError> {
     let mut game = GAMES.load(deps.storage, game_id)?;
@@ -172,17 +172,18 @@ fn _commit_round(
     }
 
     // check block_expired < current_block and status
-    if round.expires_at.unwrap_or(u64::MIN) > env.block.height {
+    if env.block.height >= round.expires_at.unwrap_or(u64::MAX) {
         // round has expired
         return Err(ContractError::RoundExpired { game_id, round: round.id });
     }
+
+    round.commits.push((player, value, amount));
 
     if round.commits.len() >= game.players.len() {
         // round is full, all players have committed
         round.status = GameRoundStatus::Committed;
     }
 
-    round.commits.push((player, value, amount));
     GAMES.save(deps.storage, game_id, &game)?;
     Ok(Response::new())
 }
@@ -293,23 +294,27 @@ fn _settle_rewards(storage: &mut dyn Storage, game: &mut Game) -> Result<Respons
 }
 
 // Ends the game by updating its state
-pub fn end_game(deps: DepsMut, game_id: u64) -> Result<Response, ContractError> {
-    // TODO:
-    //  * check if the game can be ended (must be in progress and max rounds, if set, is reached)
-    //  * update the game state accordingly
-    //  * issue rewards to the winners and burn the remaining pot    
-
+pub fn end_game(deps: DepsMut, info: MessageInfo, game_id: u64) -> Result<Response, ContractError> {
+    let is_admin = ADMINS.load(deps.storage)?.contains(&info.sender)
+        || OWNER.load(deps.storage)? == info.sender;
     let mut game = GAMES.load(deps.storage, game_id)?;
-    if game.current_round < game.config.max_rounds {
-        return Err(ContractError::CannotCloseGame {
-            reason: String::from("Game not finished!")
-        });
+    
+    // check if the game can be ended (must be in progress and max rounds, if set, is reached)
+    match (game.status, is_admin) {
+        // admin can end the game at any time or if rounds are finished
+        (GameStatus::RoundsFinished, _) | (_, true) => {
+            game.status = GameStatus::Ended;
+            _settle_rewards(deps.storage, &mut game)?;
+            GAMES.save(deps.storage, game_id, &game)?;
+        }
+        _ => {
+            return Err(ContractError::CannotCloseGame {
+                reason: String::from("Rounds not finished!")
+            });
+        }
     }
 
-    _settle_rewards(deps.storage, &mut game)?;
-
-    game.status = GameStatus::Ended;
-    GAMES.save(deps.storage, game_id, &game)?;
-
-    Ok(Response::new())
+    Ok(Response::new()
+        .add_attribute("action", "end_game")
+        .add_attribute("game_id", game_id.to_string()))
 }

@@ -67,7 +67,7 @@ pub fn execute(
             value,
             nonce,
         } => reveal_round(deps, env, info, game_id, value, nonce),
-        ExecuteMsg::EndGame { game_id } => end_game(deps, game_id),
+        ExecuteMsg::EndGame { game_id } => end_game(deps, info, game_id),
     }
 }
 
