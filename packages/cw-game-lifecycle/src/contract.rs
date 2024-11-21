@@ -72,4 +72,110 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use super::*;
+    use crate::state::{Game, GameConfig, GameStatus, GAMES};
+    use cosmwasm_std::testing::{mock_dependencies, mock_env};
+    use cosmwasm_std::{from_json, Addr, Uint128};
+
+    #[test]
+    fn test_get_game_by_id() {
+        let mut deps = mock_dependencies();
+        let game_id = 1u64;
+
+        let game = Game {
+            id: game_id,
+            players: vec![],
+            rounds: vec![],
+            current_round: 0,
+            status: GameStatus::Created,
+            game_config: GameConfig {
+                min_deposit: Uint128::new(100),
+                max_players: 2,
+                round_expiry_duration: 100,
+                max_rounds: 3,
+                round_reward_multiplier: None,
+                has_turns: false,
+                skip_reveal: false,
+            },
+        };
+
+        GAMES.save(deps.as_mut().storage, game_id, &game).unwrap();
+
+        let res = query(deps.as_ref(), mock_env(), QueryMsg::GetGame { game_id }).unwrap();
+        let saved_game: Game = from_json(&res).unwrap();
+
+        assert_eq!(game.id, saved_game.id);
+        assert_eq!(game.status, saved_game.status);
+    }
+
+    #[test]
+    fn test_get_current_round() {
+        let mut deps = mock_dependencies();
+        let game_id = 1u64;
+
+        let game = Game {
+            id: game_id,
+            players: vec![],
+            rounds: vec![],
+            current_round: 2,
+            status: GameStatus::InProgress,
+            game_config: GameConfig {
+                min_deposit: Uint128::new(100),
+                max_players: 2,
+                round_expiry_duration: 100,
+                max_rounds: 3,
+                round_reward_multiplier: None,
+                has_turns: false,
+                skip_reveal: false,
+            },
+        };
+
+        GAMES.save(deps.as_mut().storage, game_id, &game).unwrap();
+
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetCurrentRound { game_id },
+        )
+        .unwrap();
+        let current_round: u8 = from_json(&res).unwrap();
+
+        assert_eq!(current_round, 2);
+    }
+
+    #[test]
+    fn test_get_game_status() {
+        let mut deps = mock_dependencies();
+        let game_id = 1u64;
+
+        let game = Game {
+            id: game_id,
+            players: vec![],
+            rounds: vec![],
+            current_round: 0,
+            status: GameStatus::Ready,
+            game_config: GameConfig {
+                min_deposit: Uint128::new(100),
+                max_players: 2,
+                round_expiry_duration: 100,
+                max_rounds: 3,
+                round_reward_multiplier: None,
+                has_turns: false,
+                skip_reveal: false,
+            },
+        };
+
+        GAMES.save(deps.as_mut().storage, game_id, &game).unwrap();
+
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetGameStatus { game_id },
+        )
+        .unwrap();
+        let status: GameStatus = from_json(&res).unwrap();
+
+        assert_eq!(status, GameStatus::Ready);
+    }
+}
