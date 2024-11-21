@@ -1,7 +1,7 @@
 use crate::error::ContractError;
-use crate::state::{Game, GameRound, GameStatus, ADMINS, GAMES, OWNER};
+use crate::state::{Game, GameRound, GameStatus, ADMINS, ESCROW, GAMES, OWNER};
 use crate::state::{GameConfig, GAME_ID_COUNTER};
-use cosmwasm_std::{Addr, DepsMut, MessageInfo, Response, Uint128};
+use cosmwasm_std::{Addr, Coin, DepsMut, MessageInfo, Response, Uint128};
 
 // Creates a new game with the given config.
 pub fn create_game(
@@ -10,17 +10,58 @@ pub fn create_game(
     config: GameConfig,
 ) -> Result<Response, ContractError> {
     // Increment the game ID counter and use current value as the new game ID
+    let sender = info.sender.clone(); // Clone once at the start
 
     let game_id = GAME_ID_COUNTER.load(deps.storage)?;
     GAME_ID_COUNTER.save(deps.storage, &(game_id + 1))?;
 
-    let game = Game::new(game_id, config, info.sender);
-
-    //TODO: take user deposit and put it in escrow
+    let config_clone = config.clone();
+    let mut game = Game::new(game_id, config, info.sender);
 
     //TODO: check what currency is used for the deposit
-    //       * if it's not the native token $COREUM, we need to check if the cw20 token contract is whitelisted
+    //       * if it's not the native token $COREUM, we need to check if the Smart Token contract is whitelisted
     //       * if it's not whitelisted, return an error
+
+    // Check if min_deposit is required and validate user's deposit
+    if config_clone.min_deposit.amount > Uint128::zero() {
+        // Check if user sent any funds
+        if info.funds.is_empty() {
+            return Err(ContractError::NoFundsProvided {});
+        }
+
+        // Find matching deposit denomination
+        let deposit = info
+            .funds
+            .iter()
+            .find(|coin| coin.denom == config_clone.min_deposit.denom)
+            .ok_or(ContractError::InvalidDenom {
+                expected: config_clone.min_deposit.denom.clone(),
+            })?;
+        // Validate deposit amount meets minimum
+        if deposit.amount < config_clone.min_deposit.amount {
+            return Err(ContractError::InsufficientFunds {
+                expected: config_clone.min_deposit.amount,
+                received: deposit.amount,
+            });
+        }
+
+        // Deposit the funds in the escrow
+        let escrow_key = (game_id, sender);
+        let escrow = ESCROW
+            .load(deps.storage, escrow_key.clone())
+            .unwrap_or_default();
+        ESCROW.save(
+            deps.storage,
+            escrow_key,
+            &Coin {
+                denom: deposit.denom.clone(),
+                amount: escrow.amount + deposit.amount,
+            },
+        )?;
+
+        // Set initial escrow amount
+        game.total_escrow = config_clone.min_deposit.clone();
+    }
 
     GAMES.save(deps.storage, game_id, &game)?;
 
