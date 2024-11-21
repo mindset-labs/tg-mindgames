@@ -9,7 +9,7 @@ use crate::execute::{
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::query::{get_current_round, get_game_by_id, get_game_status, get_leaderboard};
-use crate::state::{GameConfig, GameMetadata, GAME_ID_COUNTER, GAME_METADATA};
+use crate::state::{GameConfig, GameMetadata, GAME_ID_COUNTER, GAME_METADATA, OWNER};
 
 /*
 // version info for migration info
@@ -21,7 +21,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     GAME_METADATA.save(
@@ -31,7 +31,7 @@ pub fn instantiate(
             image_url: msg.image_url,
         },
     )?;
-
+    OWNER.save(deps.storage, &info.sender)?;
     GAME_ID_COUNTER.save(deps.storage, &0)?;
 
     Ok(Response::new().add_attribute("action", "instantiate"))
@@ -46,15 +46,27 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::CreateGame { config } => create_game(deps, info, config),
-        ExecuteMsg::JoinGame { game_id, telegram_id } => join_game(deps, info, game_id, telegram_id),
+        ExecuteMsg::JoinGame {
+            game_id,
+            telegram_id,
+        } => join_game(deps, info, game_id, telegram_id),
         ExecuteMsg::StartGame { game_id } => start_game(deps, info, game_id),
-        ExecuteMsg::CommitRound { value, amount } => commit_round(deps, value, amount),
-        ExecuteMsg::RevealRound { value, nonce } => reveal_round(deps, value, nonce),
+        ExecuteMsg::CommitRound {
+            game_id,
+            value,
+            amount,
+        } => commit_round(deps, info, game_id, value, amount),
         ExecuteMsg::CommitRoundAsAdmin {
+            game_id,
             value,
             amount,
             player,
-        } => commit_round_as_admin(deps, value, amount, player),
+        } => commit_round_as_admin(deps, info, game_id, player, value, amount),
+        ExecuteMsg::RevealRound {
+            game_id,
+            value,
+            nonce,
+        } => reveal_round(deps, info, game_id, value, nonce),
         ExecuteMsg::EndGame { game_id } => end_game(deps, game_id),
     }
 }

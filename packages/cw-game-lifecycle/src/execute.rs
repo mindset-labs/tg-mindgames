@@ -1,6 +1,6 @@
 use crate::error::ContractError;
+use crate::state::{Game, GameRound, GameStatus, ADMINS, GAMES, OWNER};
 use crate::state::{GameConfig, GAME_ID_COUNTER};
-use crate::state::{Game, GameStatus, GAMES};
 use cosmwasm_std::{Addr, DepsMut, MessageInfo, Response, Uint128};
 
 // Creates a new game with the given config.
@@ -29,40 +29,49 @@ pub fn join_game(
     telegram_id: String,
 ) -> Result<Response, ContractError> {
     let mut game = GAMES.load(deps.storage, game_id)?;
-    
+
     if game.status != GameStatus::Created {
         // game cannot be joined since it's either already started or ended
         return Err(ContractError::GameNotInCreatedState { game_id });
     } else if game.players.iter().any(|p| p.0 == info.sender) {
         // player has already joined the game
-        return Err(ContractError::PlayerAlreadyJoined { game_id, player: info.sender.clone() });
+        return Err(ContractError::PlayerAlreadyJoined {
+            game_id,
+            player: info.sender.clone(),
+        });
     } else if game.players.len() >= game.config.max_players.unwrap_or(u8::MAX) as usize {
         // game is full and cannot be joined
         return Err(ContractError::GameFull { game_id });
     }
 
-    // TODO: handle player joining fee by reading `game.config.min_deposit```
+    // TODO: handle player joining fee by reading `game.config.min_deposit`
     //         * should lock a certain amount of the player's funds if `min_deposit` is greater than 0
     //         * should create an allowance for the game contract to spend some amount of the player's (locked) funds
     //         * this can be done by calling `lock_funds` and `increase_allowance` on the cw20 token contract from here
     //         * this contract will be whitelisted on the cw20 token contract as a minter / admin / spender
 
     // add the player to the game
-    game.players.push((info.sender.clone(), telegram_id, Uint128::zero()));
+    game.players
+        .push((info.sender.clone(), telegram_id, Uint128::zero()));
     // check if the game is ready to start and update the game status accordingly
     if game.players.len() >= game.config.min_players as usize {
         game.status = GameStatus::Ready;
     }
-    
+
     GAMES.save(deps.storage, game_id, &game)?;
-    
+
     Ok(Response::new()
         .add_attribute("action", "join_game")
         .add_attribute("game_id", game_id.to_string())
         .add_attribute("player", info.sender.clone().to_string()))
 }
 
-pub fn start_game(deps: DepsMut, info: MessageInfo, game_id: u64) -> Result<Response, ContractError> {
+// Starts the game by updating its state and creating the first round
+pub fn start_game(
+    deps: DepsMut,
+    info: MessageInfo,
+    game_id: u64,
+) -> Result<Response, ContractError> {
     let mut game = GAMES.load(deps.storage, game_id)?;
 
     if game.status != GameStatus::Ready {
@@ -70,31 +79,58 @@ pub fn start_game(deps: DepsMut, info: MessageInfo, game_id: u64) -> Result<Resp
     }
 
     game.status = GameStatus::InProgress;
+    game.current_round = 1;
+    game.rounds.push(GameRound::new(1, game.config.round_expiry_duration));
+
     GAMES.save(deps.storage, game_id, &game)?;
-    
+
     Ok(Response::new()
         .add_attribute("action", "start_game")
         .add_attribute("game_id", game_id.to_string()))
 }
 
-pub fn commit_round(
+pub fn _commit_round(
     deps: DepsMut,
+    game_id: u64,
+    player: Addr,
     value: String,
     amount: Option<Uint128>,
 ) -> Result<Response, ContractError> {
     unimplemented!()
+}
+
+pub fn commit_round(
+    deps: DepsMut,
+    info: MessageInfo,
+    game_id: u64,
+    value: String,
+    amount: Option<Uint128>,
+) -> Result<Response, ContractError> {
+    _commit_round(deps, game_id, info.sender, value, amount)
 }
 
 pub fn commit_round_as_admin(
     deps: DepsMut,
+    info: MessageInfo,
+    game_id: u64,
+    player: Addr,
     value: String,
     amount: Option<Uint128>,
-    player: Addr,
 ) -> Result<Response, ContractError> {
-    unimplemented!()
+    if !ADMINS.load(deps.storage)?.contains(&info.sender) && OWNER.load(deps.storage)? != info.sender {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    _commit_round(deps, game_id, player, value, amount)
 }
 
-pub fn reveal_round(deps: DepsMut, value: String, nonce: u64) -> Result<Response, ContractError> {
+pub fn reveal_round(
+    deps: DepsMut,
+    info: MessageInfo,
+    game_id: u64,
+    value: String,
+    nonce: u64,
+) -> Result<Response, ContractError> {
     unimplemented!()
 }
 

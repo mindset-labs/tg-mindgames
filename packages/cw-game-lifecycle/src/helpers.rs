@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{to_json_binary, Addr, CosmosMsg, StdResult, Uint128, WasmMsg};
 
-use crate::{msg::ExecuteMsg, state::{Game, GameConfig, GameStatus}};
+use crate::{msg::ExecuteMsg, state::{Game, GameConfig, GameRound, GameStatus}};
 
 /// CwTemplateContract is a wrapper around Addr that provides a lot of helpers
 /// for working with this.
@@ -52,5 +52,11 @@ impl Default for GameConfig {
             has_turns: false,
             skip_reveal: false,
         }
+    }
+}
+
+impl GameRound {
+    pub fn new(id: u8, expires_at: u64) -> Self {
+        Self { id, expires_at, commits: vec![], result: vec![] }
     }
 }

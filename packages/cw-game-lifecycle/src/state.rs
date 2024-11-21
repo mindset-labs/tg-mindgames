@@ -2,8 +2,9 @@ use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Uint128};
 use cw_storage_plus::{Item, Map};
 
-pub const OWNER: Item<String> = Item::new("owner");
+pub const OWNER: Item<Addr> = Item::new("owner");
 pub const NAME: Item<String> = Item::new("name");
+pub const ADMINS: Item<Vec<Addr>> = Item::new("admins");
 pub const GAME_ID_COUNTER: Item<u64> = Item::new("game_id_counter");
 pub const GAME_METADATA: Item<GameMetadata> = Item::new("game_metadata");
 pub const GAMES: Map<u64, Game> = Map::new("games"); // (Game ID, Game)

@@ -22,15 +22,18 @@ pub enum ExecuteMsg {
         telegram_id: String,
     },
     CommitRound {
+        game_id: u64,
         value: String, // hashed value (choice, nonce)
         amount: Option<Uint128>,
     },
     CommitRoundAsAdmin {
+        game_id: u64,
         value: String,
         amount: Option<Uint128>,
         player: Addr,
     },
     RevealRound {
+        game_id: u64,
         value: String, // revealed value
         nonce: u64,
     },
