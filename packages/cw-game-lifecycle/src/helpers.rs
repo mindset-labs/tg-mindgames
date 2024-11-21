@@ -31,11 +31,11 @@ impl Game {
         Self {
             id,
             creator,
-            players: vec![],
+            players: vec![], // TODO: should the creator be auto joined? if yes, what's the join fee?
             rounds: vec![],
             current_round: 0,
             status: GameStatus::Created,
-            game_config: config,
+            config,
         }
     }
 }

@@ -28,10 +28,31 @@ pub fn join_game(
     telegram_id: String,
 ) -> Result<Response, ContractError> {
     let mut game = GAMES.load(deps.storage, game_id)?;
-    game.players
-        .push((info.sender, telegram_id, Uint128::zero()));
+    
+    if game.status != GameStatus::Created {
+        // game cannot be joined since it's either already started or ended
+        return Err(ContractError::GameNotInCreatedState { game_id });
+    } else if game.players.iter().any(|p| p.0 == info.sender) {
+        // player has already joined the game
+        return Err(ContractError::PlayerAlreadyJoined { game_id, player: info.sender.clone() });
+    } else if game.players.len() >= game.config.max_players.unwrap_or(u8::MAX) as usize {
+        // game is full and cannot be joined
+        return Err(ContractError::GameFull { game_id });
+    }
+
+    // TODO: handle player joining fee by reading `game.config.min_deposit`
+    //         * should lock a certain amount of the player's funds if `min_deposit` is greater than 0
+    //         * should create an allowance for the game contract to spend some amount of the player's (locked) funds
+    //         * this can be done by calling `lock_funds` and `increase_allowance` on the cw20 token contract from here
+    //         * this contract will be whitelisted on the cw20 token contract as a minter / admin / spender
+
+    game.players.push((info.sender.clone(), telegram_id, Uint128::zero()));
     GAMES.save(deps.storage, game_id, &game)?;
-    Ok(Response::new())
+    
+    Ok(Response::new()
+        .add_attribute("action", "join_game")
+        .add_attribute("game_id", game_id.to_string())
+        .add_attribute("player", info.sender.clone().to_string()))
 }
 
 pub fn start_game(deps: DepsMut, info: MessageInfo, game_id: u64) -> Result<Response, ContractError> {

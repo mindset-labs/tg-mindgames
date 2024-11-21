@@ -22,7 +22,7 @@ pub struct Game {
     pub rounds: Vec<GameRound>,
     pub current_round: u8,
     pub status: GameStatus,
-    pub game_config: GameConfig,
+    pub config: GameConfig,
     pub creator: Addr,
 }
 
@@ -45,7 +45,7 @@ pub enum GameStatus {
 #[cw_serde]
 pub struct GameConfig {
     pub min_deposit: Uint128,
-    pub max_players: u8,
+    pub max_players: Option<u8>,
     pub round_expiry_duration: u64, //in Blocks
     pub max_rounds: u8,
     pub round_reward_multiplier: Option<u64>,
