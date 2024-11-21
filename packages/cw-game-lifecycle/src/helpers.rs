@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{to_json_binary, Addr, CosmosMsg, StdResult, WasmMsg};
+use cosmwasm_std::{to_json_binary, Addr, CosmosMsg, StdResult, Uint128, WasmMsg};
 
 use crate::{msg::ExecuteMsg, state::{Game, GameConfig, GameStatus}};
 
@@ -36,6 +36,21 @@ impl Game {
             current_round: 0,
             status: GameStatus::Created,
             config,
+        }
+    }
+}
+
+impl Default for GameConfig {
+    fn default() -> Self {
+        Self {
+            min_deposit: Uint128::zero(),
+            max_players: Some(5),
+            min_players: 2,
+            round_expiry_duration: 100,
+            max_rounds: 3,
+            round_reward_multiplier: None,
+            has_turns: false,
+            skip_reveal: false,
         }
     }
 }

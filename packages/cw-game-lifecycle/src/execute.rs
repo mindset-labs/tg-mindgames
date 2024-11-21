@@ -21,6 +21,7 @@ pub fn create_game(
         .add_attribute("game_id", game_id.to_string()))
 }
 
+// Joins a player to a game.
 pub fn join_game(
     deps: DepsMut,
     info: MessageInfo,
@@ -40,13 +41,19 @@ pub fn join_game(
         return Err(ContractError::GameFull { game_id });
     }
 
-    // TODO: handle player joining fee by reading `game.config.min_deposit`
+    // TODO: handle player joining fee by reading `game.config.min_deposit```
     //         * should lock a certain amount of the player's funds if `min_deposit` is greater than 0
     //         * should create an allowance for the game contract to spend some amount of the player's (locked) funds
     //         * this can be done by calling `lock_funds` and `increase_allowance` on the cw20 token contract from here
     //         * this contract will be whitelisted on the cw20 token contract as a minter / admin / spender
 
+    // add the player to the game
     game.players.push((info.sender.clone(), telegram_id, Uint128::zero()));
+    // check if the game is ready to start and update the game status accordingly
+    if game.players.len() >= game.config.min_players as usize {
+        game.status = GameStatus::Ready;
+    }
+    
     GAMES.save(deps.storage, game_id, &game)?;
     
     Ok(Response::new()
@@ -57,9 +64,17 @@ pub fn join_game(
 
 pub fn start_game(deps: DepsMut, info: MessageInfo, game_id: u64) -> Result<Response, ContractError> {
     let mut game = GAMES.load(deps.storage, game_id)?;
+
+    if game.status != GameStatus::Ready {
+        return Err(ContractError::GameNotInReadyState { game_id });
+    }
+
     game.status = GameStatus::InProgress;
     GAMES.save(deps.storage, game_id, &game)?;
-    Ok(Response::new())
+    
+    Ok(Response::new()
+        .add_attribute("action", "start_game")
+        .add_attribute("game_id", game_id.to_string()))
 }
 
 pub fn commit_round(

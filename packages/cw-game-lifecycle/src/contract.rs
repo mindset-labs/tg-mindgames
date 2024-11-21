@@ -87,15 +87,7 @@ mod tests {
             rounds: vec![],
             current_round: 0,
             status: GameStatus::Created,
-            config: GameConfig {
-                min_deposit: Uint128::new(100),
-                max_players: Some(2),
-                round_expiry_duration: 100,
-                max_rounds: 3,
-                round_reward_multiplier: None,
-                has_turns: false,
-                skip_reveal: false,
-            },
+            config: GameConfig::default(),
             creator: Addr::unchecked("creator"),
         };
 
@@ -119,15 +111,7 @@ mod tests {
             rounds: vec![],
             current_round: 2,
             status: GameStatus::InProgress,
-            config: GameConfig {
-                min_deposit: Uint128::new(100),
-                max_players: Some(2),
-                round_expiry_duration: 100,
-                max_rounds: 3,
-                round_reward_multiplier: None,
-                has_turns: false,
-                skip_reveal: false,
-            },
+            config: GameConfig::default(),
             creator: Addr::unchecked("creator"),
         };
 
@@ -155,15 +139,7 @@ mod tests {
             rounds: vec![],
             current_round: 0,
             status: GameStatus::Ready,
-            config: GameConfig {
-                min_deposit: Uint128::new(100),
-                max_players: Some(2),
-                round_expiry_duration: 100,
-                max_rounds: 3,
-                round_reward_multiplier: None,
-                has_turns: false,
-                skip_reveal: false,
-            },
+            config: GameConfig::default(),
             creator: Addr::unchecked("creator"),
         };
 

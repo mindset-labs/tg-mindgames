@@ -22,6 +22,11 @@ pub enum ContractError {
         game_id: u64,
     },
 
+    #[error("Game not in ready state and cannot be started")]
+    GameNotInReadyState {
+        game_id: u64,
+    },
+
     #[error("Unauthorized")]
     Unauthorized {},
     // Add any other custom errors you like here.

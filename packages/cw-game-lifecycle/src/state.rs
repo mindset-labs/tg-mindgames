@@ -46,6 +46,7 @@ pub enum GameStatus {
 pub struct GameConfig {
     pub min_deposit: Uint128,
     pub max_players: Option<u8>,
+    pub min_players: u8,
     pub round_expiry_duration: u64, //in Blocks
     pub max_rounds: u8,
     pub round_reward_multiplier: Option<u64>,
