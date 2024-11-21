@@ -27,11 +27,30 @@ pub enum ContractError {
     #[error("Wrong denom for deposit")]
     InvalidDenom { expected: String },
 
+    #[error("Player is not in the game")]
+    PlayerNotInGame { game_id: u64, player: Addr },
+
+    #[error("Round has already been committed")]
+    RoundAlreadyCommitted { game_id: u64, player: Addr },
+
+    #[error("Round not found")]
+    RoundNotFound { game_id: u64, round: u8 },
+
+    #[error("Round has expired")]
+    RoundExpired { game_id: u64, round: u8 },
+
+    #[error("Round has not been committed")]
+    RoundNotCommitted { game_id: u64, round: u8 },
+
     #[error("Insufficient funds for deposit")]
     InsufficientFunds {
         expected: Uint128,
         received: Uint128,
     },
-    // Add any other custom errors you like here.
-    // Look at https://docs.rs/thiserror/1.0.21/thiserror/ for details.
+
+    #[error("Cannot close game {reason}")]
+    CannotCloseGame { reason: String },
+
+    #[error("Round reveal mismatch")]
+    RoundRevealMismatch{game_id: u64, round: u8},
 }

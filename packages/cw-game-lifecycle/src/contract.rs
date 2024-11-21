@@ -55,18 +55,18 @@ pub fn execute(
             game_id,
             value,
             amount,
-        } => commit_round(deps, info, game_id, value, amount),
+        } => commit_round(deps, env, info, game_id, value, amount),
         ExecuteMsg::CommitRoundAsAdmin {
             game_id,
             value,
             amount,
             player,
-        } => commit_round_as_admin(deps, info, game_id, player, value, amount),
+        } => commit_round_as_admin(deps, env, info, game_id, player, value, amount),
         ExecuteMsg::RevealRound {
             game_id,
             value,
             nonce,
-        } => reveal_round(deps, info, game_id, value, nonce),
+        } => reveal_round(deps, env, info, game_id, value, nonce),
         ExecuteMsg::EndGame { game_id } => end_game(deps, game_id),
     }
 }
@@ -101,6 +101,8 @@ mod tests {
             status: GameStatus::Created,
             config: GameConfig::default(),
             creator: Addr::unchecked("creator"),
+            total_escrow: Uint128::zero(),
+            player_escrow: vec![],
         };
 
         GAMES.save(deps.as_mut().storage, game_id, &game).unwrap();
@@ -125,6 +127,8 @@ mod tests {
             status: GameStatus::InProgress,
             config: GameConfig::default(),
             creator: Addr::unchecked("creator"),
+            total_escrow: Uint128::zero(),
+            player_escrow: vec![],
         };
 
         GAMES.save(deps.as_mut().storage, game_id, &game).unwrap();
@@ -153,6 +157,8 @@ mod tests {
             status: GameStatus::Ready,
             config: GameConfig::default(),
             creator: Addr::unchecked("creator"),
+            total_escrow: Uint128::zero(),
+            player_escrow: vec![],
         };
 
         GAMES.save(deps.as_mut().storage, game_id, &game).unwrap();

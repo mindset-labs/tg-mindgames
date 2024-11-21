@@ -416,8 +416,10 @@ dependencies = [
  "cw2",
  "cw20",
  "cw20-base",
+ "hex",
  "schemars",
  "serde",
+ "sha2",
  "thiserror 2.0.3",
 ]
 

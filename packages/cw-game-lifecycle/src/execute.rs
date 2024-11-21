@@ -1,7 +1,61 @@
+use std::u64;
+
 use crate::error::ContractError;
-use crate::state::{Game, GameRound, GameStatus, ADMINS, ESCROW, GAMES, OWNER};
+use crate::state::{Game, GameRound, GameRoundStatus, GameStatus, ADMINS, GAMES, OWNER};
 use crate::state::{GameConfig, GAME_ID_COUNTER};
-use cosmwasm_std::{Addr, Coin, DepsMut, MessageInfo, Response, Uint128};
+use cosmwasm_std::{Addr, DepsMut, Env, MessageInfo, Response, Storage, Uint128};
+use sha2::{Digest, Sha256};
+use hex;
+
+fn _validate_deposit() -> Result<(), ContractError> {
+    //TODO: check what currency is used for the deposit
+    //       * if it's not the native token $COREUM, we need to check if the Smart Token contract is whitelisted
+    //       * if it's not whitelisted, return an error
+
+    // // Check if min_deposit is required and validate user's deposit
+    // if config_clone.min_deposit > Uint128::zero() {
+    //     // Check if user sent any funds
+    //     if info.funds.is_empty() {
+    //         return Err(ContractError::NoFundsProvided {});
+    //     }
+
+    //     // Find matching deposit denomination
+    //     let deposit = info
+    //         .funds
+    //         .iter()
+    //         .find(|coin| coin.denom == config_clone.min_deposit.denom)
+    //         .ok_or(ContractError::InvalidDenom {
+    //             expected: config_clone.min_deposit.denom.clone(),
+    //         })?;
+
+    //     // Validate deposit amount meets minimum
+    //     if deposit.amount < config_clone.min_deposit {
+    //         return Err(ContractError::InsufficientFunds {
+    //             expected: config_clone.min_deposit,
+    //             received: deposit.amount,
+    //         });
+    //     }
+
+    //     // Deposit the funds in the escrow
+    //     let escrow_key = (game_id, sender);
+    //     let escrow = ESCROW
+    //         .load(deps.storage, escrow_key.clone())
+    //         .unwrap_or_default();
+    //     ESCROW.save(
+    //         deps.storage,
+    //         escrow_key,
+    //         &Coin {
+    //             denom: deposit.denom.clone(),
+    //             amount: escrow.amount + deposit.amount,
+    //         },
+    //     )?;
+
+    //     // Set initial escrow amount
+    //     game.total_escrow = config_clone.min_deposit.clone();
+    // }
+
+    Ok(())
+}
 
 // Creates a new game with the given config.
 pub fn create_game(
@@ -10,59 +64,10 @@ pub fn create_game(
     config: GameConfig,
 ) -> Result<Response, ContractError> {
     // Increment the game ID counter and use current value as the new game ID
-    let sender = info.sender.clone(); // Clone once at the start
-
     let game_id = GAME_ID_COUNTER.load(deps.storage)?;
     GAME_ID_COUNTER.save(deps.storage, &(game_id + 1))?;
 
-    let config_clone = config.clone();
-    let mut game = Game::new(game_id, config, info.sender);
-
-    //TODO: check what currency is used for the deposit
-    //       * if it's not the native token $COREUM, we need to check if the Smart Token contract is whitelisted
-    //       * if it's not whitelisted, return an error
-
-    // Check if min_deposit is required and validate user's deposit
-    if config_clone.min_deposit.amount > Uint128::zero() {
-        // Check if user sent any funds
-        if info.funds.is_empty() {
-            return Err(ContractError::NoFundsProvided {});
-        }
-
-        // Find matching deposit denomination
-        let deposit = info
-            .funds
-            .iter()
-            .find(|coin| coin.denom == config_clone.min_deposit.denom)
-            .ok_or(ContractError::InvalidDenom {
-                expected: config_clone.min_deposit.denom.clone(),
-            })?;
-        // Validate deposit amount meets minimum
-        if deposit.amount < config_clone.min_deposit.amount {
-            return Err(ContractError::InsufficientFunds {
-                expected: config_clone.min_deposit.amount,
-                received: deposit.amount,
-            });
-        }
-
-        // Deposit the funds in the escrow
-        let escrow_key = (game_id, sender);
-        let escrow = ESCROW
-            .load(deps.storage, escrow_key.clone())
-            .unwrap_or_default();
-        ESCROW.save(
-            deps.storage,
-            escrow_key,
-            &Coin {
-                denom: deposit.denom.clone(),
-                amount: escrow.amount + deposit.amount,
-            },
-        )?;
-
-        // Set initial escrow amount
-        game.total_escrow = config_clone.min_deposit.clone();
-    }
-
+    let game = Game::new(game_id, config, info.sender);
     GAMES.save(deps.storage, game_id, &game)?;
 
     Ok(Response::new()
@@ -101,8 +106,7 @@ pub fn join_game(
     //         * this contract will be whitelisted on the cw20 token contract as a minter / admin / spender
 
     // add the player to the game
-    game.players
-        .push((info.sender.clone(), telegram_id, Uint128::zero()));
+    game.players.push((info.sender.clone(), telegram_id));
     // check if the game is ready to start and update the game status accordingly
     if game.players.len() >= game.config.min_players as usize {
         game.status = GameStatus::Ready;
@@ -143,34 +147,62 @@ pub fn start_game(
 // Internal method to commit a round to the game as a player or an admin
 fn _commit_round(
     deps: DepsMut,
+    env: Env,
     game_id: u64,
     player: Addr,
     value: String,
     amount: Option<Uint128>,
 ) -> Result<Response, ContractError> {
-    // TODO:
-    //  * check if the player is in the game, if not, do some state updates just to charge them funds (👹)
-    //  * check round status (must be valid)
-    //  * check if the round has already been committed by the player
-    //  * commit the round
+    let mut game = GAMES.load(deps.storage, game_id)?;
 
-    unimplemented!()
+    if !game.players.iter().any(|p| p.0 == player) {
+        // player is not in the game, throw an error
+        return Err(ContractError::PlayerNotInGame { game_id, player });
+    }
+
+    let round = game
+        .rounds
+        .iter_mut()
+        .find(|r| r.id == game.current_round)
+        .ok_or(ContractError::RoundNotFound { game_id, round: game.current_round })?;
+
+    if round.commits.iter().any(|c| c.0 == player) {
+        // player has already committed to the round
+        return Err(ContractError::RoundAlreadyCommitted { game_id, player });
+    }
+
+    // check block_expired < current_block and status
+    if round.expires_at.unwrap_or(u64::MIN) > env.block.height {
+        // round has expired
+        return Err(ContractError::RoundExpired { game_id, round: round.id });
+    }
+
+    if round.commits.len() >= game.players.len() {
+        // round is full, all players have committed
+        round.status = GameRoundStatus::Committed;
+    }
+
+    round.commits.push((player, value, amount));
+    GAMES.save(deps.storage, game_id, &game)?;
+    Ok(Response::new())
 }
 
 // Commits a round to the game as a player
 pub fn commit_round(
     deps: DepsMut,
+    env: Env,
     info: MessageInfo,
     game_id: u64,
     value: String,
     amount: Option<Uint128>,
 ) -> Result<Response, ContractError> {
-    _commit_round(deps, game_id, info.sender, value, amount)
+    _commit_round(deps, env, game_id, info.sender, value, amount)
 }
 
 // Commits a round to the game as an admin
 pub fn commit_round_as_admin(
     deps: DepsMut,
+    env: Env,
     info: MessageInfo,
     game_id: u64,
     player: Addr,
@@ -183,24 +215,80 @@ pub fn commit_round_as_admin(
         return Err(ContractError::Unauthorized {});
     }
 
-    _commit_round(deps, game_id, player, value, amount)
+    _commit_round(deps, env, game_id, player, value, amount)
 }
 
 // Reveals a round by a player
 pub fn reveal_round(
     deps: DepsMut,
+    env: Env,
     info: MessageInfo,
     game_id: u64,
     value: String,
-    nonce: u64,
+    nonce: u64, //will be store temporally in the frontend
 ) -> Result<Response, ContractError> {
-    // TODO:
-    //  * check round status (must be valid - all players must have committed to begin revealing)
-    //  * find the players commit for the round
-    //  * hash(value, nonce) and compare it with the committed value
-    //      * if they match, update the round reveal set
-    //      * if not, return an error
-    //  * if all the players revealed, calculate the winner and update the round / game state accordingly
+    let mut game = GAMES.load(deps.storage, game_id)?;
+
+    if game.config.skip_reveal {
+        // skip reveal, just calculate the winner
+        return Ok(Response::new()
+            .add_attribute("action", "reveal_round")
+            .add_attribute("game_id", game_id.to_string())
+            .add_attribute("round_id", game.current_round.to_string()));
+    }
+
+    let round = game
+        .rounds
+        .iter_mut()
+        .find(|r| r.id == game.current_round)
+        .ok_or(ContractError::RoundNotFound { game_id, round: game.current_round })?;
+
+    // Not all players committed and the round has not expired
+    if round.status != GameRoundStatus::Committed && round.expires_at.unwrap_or(u64::MAX) > env.block.height {
+        return Err(ContractError::RoundNotCommitted { game_id, round: round.id });
+    }
+
+    let player_commit = round
+        .commits
+        .iter()
+        .find(|c| c.0 == info.sender)
+        .map(|c| c.1.clone());
+    
+    let mut hasher = Sha256::new();
+    hasher.update(value.as_bytes());
+    hasher.update(nonce.to_be_bytes());
+    let hash = hex::encode(hasher.finalize());
+    
+    //Check if the reveal_commit match the previously submitted hashed commit 
+    if hash != player_commit.unwrap_or_default() {
+        return Err(ContractError::RoundRevealMismatch { game_id: game_id, round: game.current_round });
+    }
+
+    // push the revealed value and optionally close the round
+    round.reveals.push((info.sender.clone(), value));
+
+    // if all players revealed or the round has expired, close the round
+    if round.reveals.len() >= game.players.len() || round.expires_at.unwrap_or(u64::MAX) < env.block.height {
+        round.status = GameRoundStatus::Ended;
+        game.current_round += 1;
+    }
+
+    // if all rounds are finished, set the game status to RoundsFinished
+    if game.current_round >= game.config.max_rounds {
+        game.status = GameStatus::RoundsFinished;
+    }
+
+    GAMES.save(deps.storage, game_id, &game)?;
+
+    Ok(Response::new()
+        .add_attribute("action", "reveal_round")
+        .add_attribute("game_id", game_id.to_string())
+        .add_attribute("round_id", game.current_round.to_string())
+        .add_attribute("player", info.sender.clone().to_string()))
+}
+
+// Internal method to settle rewards for a game
+fn _settle_rewards(storage: &mut dyn Storage, game: &mut Game) -> Result<Response, ContractError> {
     unimplemented!()
 }
 
@@ -209,7 +297,19 @@ pub fn end_game(deps: DepsMut, game_id: u64) -> Result<Response, ContractError> 
     // TODO:
     //  * check if the game can be ended (must be in progress and max rounds, if set, is reached)
     //  * update the game state accordingly
-    //  * issue rewards to the winners and burn the remaining pot
+    //  * issue rewards to the winners and burn the remaining pot    
 
-    unimplemented!()
+    let mut game = GAMES.load(deps.storage, game_id)?;
+    if game.current_round < game.config.max_rounds {
+        return Err(ContractError::CannotCloseGame {
+            reason: String::from("Game not finished!")
+        });
+    }
+
+    _settle_rewards(deps.storage, &mut game)?;
+
+    game.status = GameStatus::Ended;
+    GAMES.save(deps.storage, game_id, &game)?;
+
+    Ok(Response::new())
 }

@@ -50,3 +50,5 @@ thiserror = { version = "2.0.3" }
 cw20 = { version = "2.0.0" }
 cw20-base = { version = "2.0.0", features = ["library"] }
 cw-ownable = { version = "2.1.0" }
+sha2 = { version = "0.10" }
+hex = { version = "0.4" }
