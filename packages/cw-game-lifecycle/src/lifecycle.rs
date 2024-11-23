@@ -1,4 +1,4 @@
-use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128};
+use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult, Uint128};
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -242,11 +242,13 @@ pub trait GameLifecycle {
         value: String,
         nonce: u64,
     ) -> Result<Response, ContractError> {
+        let mut events: Vec<Event> = vec![];
         let mut game = GAMES.load(deps.storage, game_id)?;
 
         if game.config.skip_reveal {
             // skip reveal, just calculate the winner
             return Ok(Response::new()
+                .add_events(events)
                 .add_attribute("action", "reveal_round")
                 .add_attribute("game_id", game_id.to_string())
                 .add_attribute("round_id", game.current_round.to_string()));
@@ -304,11 +306,14 @@ pub trait GameLifecycle {
         // if all rounds are finished, set the game status to RoundsFinished
         if game.current_round >= game.config.max_rounds {
             game.status = GameStatus::RoundsFinished;
+            events.push(Event::new("game_rounds_finished")
+                .add_attribute("game_id", game_id.to_string()));
         }
 
         GAMES.save(deps.storage, game_id, &game)?;
 
         Ok(Response::new()
+            .add_events(events)
             .add_attribute("action", "reveal_round")
             .add_attribute("game_id", game_id.to_string())
             .add_attribute("round_id", game.current_round.to_string())
@@ -371,6 +376,15 @@ pub trait GameLifecycle {
     }
 
     // Helpers
+    fn process_joining_fee(
+        deps: DepsMut,
+        env: Env,
+        info: MessageInfo,
+        game: &Game,
+    ) -> Result<bool, ContractError> {
+        Ok(true)
+    }
+
     fn process_round_deposit(
         deps: DepsMut,
         env: Env,
@@ -425,15 +439,6 @@ pub trait GameLifecycle {
         //     game.total_escrow = config_clone.min_deposit.clone();
         // }
 
-        Ok(true)
-    }
-
-    fn validate_reveal(
-        deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
-        msg: ExecuteMsg,
-    ) -> Result<bool, ContractError> {
         Ok(true)
     }
 
