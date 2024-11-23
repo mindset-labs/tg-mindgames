@@ -4,12 +4,8 @@ use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult}
 // use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::execute::{
-    commit_round, commit_round_as_admin, create_game, end_game, join_game, reveal_round, start_game,
-};
+use crate::lifecycle::GameLifecycle;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::query::{get_current_round, get_game_by_id, get_game_status, get_leaderboard};
-use crate::state::{GameConfig, GameMetadata, GAME_ID_COUNTER, GAME_METADATA, OWNER};
 
 /*
 // version info for migration info
@@ -17,24 +13,18 @@ const CONTRACT_NAME: &str = "crates.io:cw-game-lifecycle";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 */
 
+// Base contract implementation which inherits the GameLifecycle trait and its default implementations
+pub struct BaseContract;
+impl GameLifecycle for BaseContract {}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    GAME_METADATA.save(
-        deps.storage,
-        &GameMetadata {
-            base_url: msg.base_url,
-            image_url: msg.image_url,
-        },
-    )?;
-    OWNER.save(deps.storage, &info.sender)?;
-    GAME_ID_COUNTER.save(deps.storage, &0)?;
-
-    Ok(Response::new().add_attribute("action", "instantiate"))
+    BaseContract::instantiate(deps, env, info, msg)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -44,41 +34,12 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
-    match msg {
-        ExecuteMsg::CreateGame { config } => create_game(deps, info, config),
-        ExecuteMsg::JoinGame {
-            game_id,
-            telegram_id,
-        } => join_game(deps, info, game_id, telegram_id),
-        ExecuteMsg::StartGame { game_id } => start_game(deps, info, game_id),
-        ExecuteMsg::CommitRound {
-            game_id,
-            value,
-            amount,
-        } => commit_round(deps, env, info, game_id, value, amount),
-        ExecuteMsg::CommitRoundAsAdmin {
-            game_id,
-            value,
-            amount,
-            player,
-        } => commit_round_as_admin(deps, env, info, game_id, player, value, amount),
-        ExecuteMsg::RevealRound {
-            game_id,
-            value,
-            nonce,
-        } => reveal_round(deps, env, info, game_id, value, nonce),
-        ExecuteMsg::EndGame { game_id } => end_game(deps, info, game_id),
-    }
+    BaseContract::execute(deps, env, info, msg)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
-    match msg {
-        QueryMsg::GetGame { game_id } => get_game_by_id(deps, game_id),
-        QueryMsg::GetLeaderboard {} => get_leaderboard(deps),
-        QueryMsg::GetCurrentRound { game_id } => get_current_round(deps, game_id),
-        QueryMsg::GetGameStatus { game_id } => get_game_status(deps, game_id),
-    }
+pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    BaseContract::query(deps, env, msg)
 }
 
 #[cfg(test)]
