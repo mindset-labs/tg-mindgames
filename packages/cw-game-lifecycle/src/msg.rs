@@ -53,4 +53,6 @@ pub enum QueryMsg {
     GetCurrentRound { game_id: u64 },
     #[returns(GameStatus)]
     GetGameStatus { game_id: u64 },
+    #[returns(u64)]
+    GetGamesCount {},
 }

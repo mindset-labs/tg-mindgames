@@ -66,6 +66,7 @@ pub trait GameLifecycle {
             QueryMsg::GetLeaderboard {} => Self::get_leaderboard(deps),
             QueryMsg::GetCurrentRound { game_id } => Self::get_current_round(deps, game_id),
             QueryMsg::GetGameStatus { game_id } => Self::get_game_status(deps, game_id),
+            QueryMsg::GetGamesCount {} => Self::get_games_count(deps),
         }
     }
 
@@ -362,6 +363,11 @@ pub trait GameLifecycle {
     fn get_game_status(deps: Deps, game_id: u64) -> StdResult<Binary> {
         let game = GAMES.load(deps.storage, game_id)?;
         to_json_binary(&game.status)
+    }
+
+    fn get_games_count(deps: Deps) -> StdResult<Binary> {
+        let games_count = GAME_ID_COUNTER.load(deps.storage)?;
+        to_json_binary(&games_count)
     }
 
     // Helpers
