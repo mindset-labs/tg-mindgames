@@ -32,17 +32,18 @@ optimize = """docker run --rm -v "$(pwd)":/code \
 """
 
 [dependencies]
-cosmwasm-schema = "2.1.0"
-cosmwasm-std = { version = "2.1.0", features = [
-  "cosmwasm_1_4",
-  # Enable this if you only deploy to chains that have CosmWasm 2.0 or higher
-  # "cosmwasm_2_0",
-] }
-cw-storage-plus = "2.0.0"
-cw2 = "2.0.0"
-schemars = "0.8.16"
-serde = { version = "1.0.197", default-features = false, features = ["derive"] }
-thiserror = { version = "1.0.58" }
+cosmwasm-schema = { workspace = true }
+cosmwasm-std    = { workspace = true }
+cw-utils        = { workspace = true }
+schemars        = { workspace = true }
+serde           = { workspace = true }
+cw-storage-plus = { workspace = true }
+cw2             = { workspace = true }
+thiserror       = { workspace = true }
+cw20            = { workspace = true }
+cw20-base       = { workspace = true }
+cw-ownable      = { workspace = true }
+cw-game-lifecycle = { path = "../../packages/cw-game-lifecycle", features = ["library"] }
 
 [dev-dependencies]
 cw-multi-test = "2.0.0"
