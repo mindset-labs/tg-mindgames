@@ -1,5 +1,5 @@
 [package]
-name = "cw20-play-to-earn"
+name = "cw-p2e"
 version = "0.1.0"
 authors = ["FaisalAl-Tameemi <faisal@mindsetlabs.io>"]
 edition = "2021"
