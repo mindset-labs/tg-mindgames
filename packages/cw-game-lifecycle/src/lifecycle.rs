@@ -40,7 +40,7 @@ pub trait GameLifecycle {
             ExecuteMsg::JoinGame {
                 game_id,
                 telegram_id,
-            } => Self::join_game(deps, info, game_id, telegram_id),
+            } => Self::join_game(deps, env, info, game_id, telegram_id),
             ExecuteMsg::StartGame { game_id } => Self::start_game(deps, env, info, game_id),
             ExecuteMsg::CommitRound {
                 game_id,
@@ -116,6 +116,7 @@ pub trait GameLifecycle {
 
     fn join_game(
         deps: DepsMut,
+        env: Env,
         info: MessageInfo,
         game_id: u64,
         telegram_id: String,
@@ -136,13 +137,6 @@ pub trait GameLifecycle {
             return Err(ContractError::GameFull { game_id });
         }
 
-        // TODO: handle player joining fee by reading `game.config.min_deposit`
-        //         * should lock a certain amount of the player's funds if `min_deposit` is greater than 0
-        //         *
-        //         * should create an allowance for the game contract to spend some amount of the player's (locked) funds
-        //         * this can be done by calling `lock_funds` and `increase_allowance` on the cw20 token contract from here
-        //         * this contract will be whitelisted on the cw20 token contract as a minter / admin / spender
-
         // add the player to the game
         game.players.push((info.sender.clone(), telegram_id));
         // check if the game is ready to start and update the game status accordingly
@@ -152,10 +146,17 @@ pub trait GameLifecycle {
 
         GAMES.save(deps.storage, game_id, &game)?;
 
-        Ok(Response::new()
+        let mut response = Response::new()
             .add_attribute("action", "join_game")
             .add_attribute("game_id", game_id.to_string())
-            .add_attribute("player", info.sender.clone().to_string()))
+            .add_attribute("player", info.sender.clone().to_string());
+
+        if let Some(joining_fee_msg) = Self::process_joining_fee(deps, env, info, &mut game)? {
+            // transfer the joining fee to the game contract in the P2E token contract
+            response = response.add_message(joining_fee_msg);
+        }
+
+        Ok(response)
     }
 
     fn _commit_round(
