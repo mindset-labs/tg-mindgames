@@ -45,6 +45,7 @@ cw20-base       = { workspace = true }
 cw-ownable      = { workspace = true }
 sha2            = { workspace = true }
 hex             = { workspace = true }
+cw-p2e = { path = "../../contracts/cw-p2e", features = ["library"] }
 
 [dev-dependencies]
 cw-multi-test = { version = "2.0.0" }

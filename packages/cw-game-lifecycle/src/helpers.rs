@@ -60,6 +60,7 @@ pub trait GameRewards {
 impl Default for GameConfig {
     fn default() -> Self {
         Self {
+            game_joining_fee: None,
             min_deposit: Uint128::zero(),
             max_players: Some(5),
             min_players: 2,

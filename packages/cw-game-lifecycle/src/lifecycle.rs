@@ -1,4 +1,5 @@
-use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult, Uint128};
+use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult, Uint128, WasmMsg};
+use cw_p2e::msg::ExecuteMsg as P2EExecuteMsg;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -19,6 +20,7 @@ pub trait GameLifecycle {
             &GameMetadata {
                 base_url: msg.base_url,
                 image_url: msg.image_url,
+                token_contract: msg.token_contract,
             },
         )?;
         OWNER.save(deps.storage, &info.sender)?;
@@ -380,9 +382,29 @@ pub trait GameLifecycle {
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        game: &Game,
-    ) -> Result<bool, ContractError> {
-        Ok(true)
+        game: &mut Game,
+    ) -> Result<Option<WasmMsg>, ContractError> {
+        let metadata = GAME_METADATA.load(deps.storage)?;
+
+        if let Some(joining_fee) = game.config.game_joining_fee {
+            // transfer the joining fee to the game contract in the P2E token contract
+            let msg = WasmMsg::Execute {
+                contract_addr: metadata.token_contract.to_string(),
+                msg: to_json_binary(&P2EExecuteMsg::TransferFrom {
+                    owner: info.sender.to_string(),
+                    recipient: env.contract.address.to_string(),
+                    amount: joining_fee,
+                })?,
+                funds: vec![],
+            };
+            // keep track of the joining fee in the game's escrow
+            game.total_escrow += joining_fee;
+            game.player_escrow.push((info.sender, joining_fee));
+
+            return Ok(Some(msg));
+        }
+
+        Ok(None)
     }
 
     fn process_round_deposit(

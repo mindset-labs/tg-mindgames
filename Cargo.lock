@@ -416,6 +416,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
  "cw-ownable",
+ "cw-p2e",
  "cw-storage-plus",
  "cw-utils",
  "cw2",
@@ -472,6 +473,23 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "cw-p2e"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-storage-plus",
+ "cw-utils",
+ "cw2",
+ "cw20",
+ "cw20-base",
+ "schemars",
+ "serde",
+ "thiserror 2.0.3",
 ]
 
 [[package]]
@@ -588,23 +606,6 @@ dependencies = [
  "semver",
  "serde",
  "thiserror 1.0.69",
-]
-
-[[package]]
-name = "cw20-play-to-earn"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-multi-test",
- "cw-storage-plus",
- "cw-utils",
- "cw2",
- "cw20",
- "cw20-base",
- "schemars",
- "serde",
- "thiserror 2.0.3",
 ]
 
 [[package]]

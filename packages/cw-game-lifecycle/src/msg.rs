@@ -7,6 +7,7 @@ use cosmwasm_std::Uint128;
 pub struct InstantiateMsg {
     pub base_url: String,
     pub image_url: String,
+    pub token_contract: Addr,
 }
 
 #[cw_serde]
