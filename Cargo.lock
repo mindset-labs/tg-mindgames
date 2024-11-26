@@ -398,6 +398,7 @@ dependencies = [
  "cw-game-lifecycle",
  "cw-multi-test",
  "cw-ownable",
+ "cw-p2e",
  "cw-storage-plus",
  "cw-utils",
  "cw2",

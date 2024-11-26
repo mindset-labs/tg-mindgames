@@ -73,6 +73,14 @@ impl Default for GameConfig {
     }
 }
 
+impl GameConfig {
+    pub fn default_with_join_fee(join_fee: Uint128) -> Self {
+        let mut default = Self::default();
+        default.game_joining_fee = Some(join_fee);
+        default
+    }
+}
+
 impl GameRound {
     pub fn new(id: u8, expires_at: Option<u64>) -> Self {
         Self { id, expires_at, commits: vec![], reveals: vec![], status: GameRoundStatus::Pending }
