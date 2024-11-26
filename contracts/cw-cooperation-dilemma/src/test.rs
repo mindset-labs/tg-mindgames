@@ -306,4 +306,42 @@ mod tests {
             .execute_contract(p2.clone(), cooperation_game_contract.addr(), &msg, &[])
             .unwrap();
     }
+
+    #[test]
+    fn dilemma_contract_cannot_join_max_players() {
+        let mut app = mock_app();
+        let p1 = app.api().addr_make(&"player_1".to_string());
+        let p2 = app.api().addr_make(&"player_2".to_string());
+        let p3 = app.api().addr_make(&"player_3".to_string());
+        let (_p2e_contract, cooperation_game_contract) = setup_contracts(&mut app, None);
+
+        let mut config = cw_game_lifecycle::state::GameConfig::default();
+        config.max_players = Some(2);
+        let msg =
+            crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::CreateGame {
+                config,
+            });
+
+        // player 1 creates the game
+        app
+            .execute_contract(p1.clone(), cooperation_game_contract.addr(), &msg, &[])
+            .unwrap();
+
+        // player 1 can join the game
+        vec![p1, p2].iter().for_each(|p| {
+            let msg = crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::JoinGame {
+                game_id: 0,
+                telegram_id: p.to_string(),
+            });
+            app.execute_contract(p.clone(), cooperation_game_contract.addr(), &msg, &[]).unwrap();
+        });
+
+        // player 3 cannot join the game
+        let msg = crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::JoinGame {
+            game_id: 0,
+            telegram_id: p3.to_string(),
+        });
+        let res = app.execute_contract(p3.clone(), cooperation_game_contract.addr(), &msg, &[]);
+        assert!(res.is_err());
+    }
 }
