@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use cosmwasm_std::{
     to_json_binary, Addr, Binary, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult,
     Uint128, WasmMsg,
@@ -108,7 +110,7 @@ pub trait GameLifecycle {
 
         game.status = GameStatus::InProgress;
         game.current_round = 1;
-        
+
         let round_expiry = match game.config.round_expiry_duration {
             Some(block_duration) => Some(env.block.height + block_duration),
             None => None,
@@ -334,7 +336,7 @@ pub trait GameLifecycle {
 
     fn end_game(
         deps: DepsMut,
-        env: Env,
+        _env: Env,
         info: MessageInfo,
         game_id: u64,
     ) -> Result<Response, ContractError> {
@@ -347,17 +349,30 @@ pub trait GameLifecycle {
             // admin can end the game at any time or if rounds are finished
             (GameStatus::RoundsFinished, _) | (_, true) => {
                 game.status = GameStatus::Ended;
-                GAMES.save(deps.storage, game_id, &game)?;
-                Self::calculate_rewards_and_winners(deps, env, info, &mut game)?;
+                Self::calculate_rewards_and_winners(&mut game)?
             }
             _ => {
                 return Err(ContractError::CannotCloseGame {
                     reason: String::from("Rounds not finished!"),
                 });
             }
-        }
+        };
+
+        GAMES.save(deps.storage, game_id, &game)?;
+
+        // define winnings as events
+        let mut winnings_events = vec![];
+        game.scores.into_iter().for_each(|(id, score)| {
+            winnings_events.push(
+                Event::new("game_winnings")
+                    .add_attribute("game_id", game_id.to_string())
+                    .add_attribute("player", id.to_string())
+                    .add_attribute("score", score.to_string()),
+            );
+        });
 
         Ok(Response::new()
+            .add_events(winnings_events)
             .add_attribute("action", "end_game")
             .add_attribute("game_id", game_id.to_string()))
     }
@@ -431,10 +446,7 @@ pub trait GameLifecycle {
     }
 
     fn calculate_rewards_and_winners(
-        _deps: DepsMut,
-        _env: Env,
-        _info: MessageInfo,
-        _game: &Game,
+        _game: &mut Game,
     ) -> Result<bool, ContractError> {
         // Each game must implement its own logic to calculate the rewards and winners
         Ok(true)

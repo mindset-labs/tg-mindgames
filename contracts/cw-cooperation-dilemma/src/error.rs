@@ -9,6 +9,9 @@ pub enum ContractError {
     #[error("{0}")]
     GameLifecycle(#[from] cw_game_lifecycle::error::ContractError),
 
+    #[error("Invalid choice")]
+    InvalidChoice {},
+
     #[error("Unauthorized")]
     Unauthorized {},
     // Add any other custom errors you like here.

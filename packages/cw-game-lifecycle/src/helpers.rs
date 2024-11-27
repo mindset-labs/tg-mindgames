@@ -37,6 +37,7 @@ impl Game {
             config,
             total_escrow: Uint128::zero(),
             player_escrow: vec![],
+            scores: HashMap::new(),
         }
     }
 }

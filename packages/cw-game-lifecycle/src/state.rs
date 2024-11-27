@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Uint128};
 use cw_storage_plus::{Item, Map};
@@ -28,6 +30,7 @@ pub struct Game {
     pub creator: Addr,
     pub total_escrow: Uint128, // Total escrowed funds for this game
     pub player_escrow: Vec<(Addr, Uint128)>, // (player, escrowed funds)
+    pub scores: HashMap<Addr, Uint128>, // (player, score)
 }
 
 #[cw_serde]

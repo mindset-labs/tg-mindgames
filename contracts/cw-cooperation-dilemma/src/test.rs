@@ -326,6 +326,16 @@ mod tests {
         app
             .execute_contract(p2.clone(), cooperation_game_contract.addr(), &msg, &[])
             .unwrap();
+
+        // check if balances are updated in the P2E contract
+        let balance: cw20::BalanceResponse = app.wrap().query_wasm_smart(p2e_contract.addr(), &cw_p2e::msg::QueryMsg::Balance {
+            address: p1.to_string(),
+        }).unwrap();
+        assert_eq!(balance.balance, Uint128::new(99_900));
+        let balance: cw20::BalanceResponse = app.wrap().query_wasm_smart(p2e_contract.addr(), &cw_p2e::msg::QueryMsg::Balance {
+            address: p2.to_string(),
+        }).unwrap();
+        assert_eq!(balance.balance, Uint128::new(99_900));
     }
 
     #[test]
