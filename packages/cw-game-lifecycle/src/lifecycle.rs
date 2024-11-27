@@ -419,22 +419,22 @@ pub trait GameLifecycle {
     }
 
     fn process_round_deposit(
-        deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
-        game: &Game,
-        round_id: u64,
-        player: Addr,
+        _deps: DepsMut,
+        _env: Env,
+        _info: MessageInfo,
+        _game: &Game,
+        _round_id: u64,
+        _player: Addr,
     ) -> Result<bool, ContractError> {
         // Each game must implement its own logic to process the round deposit
         Ok(true)
     }
 
     fn calculate_rewards_and_winners(
-        deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
-        game: &Game,
+        _deps: DepsMut,
+        _env: Env,
+        _info: MessageInfo,
+        _game: &Game,
     ) -> Result<bool, ContractError> {
         // Each game must implement its own logic to calculate the rewards and winners
         Ok(true)
