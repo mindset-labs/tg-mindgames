@@ -374,7 +374,7 @@ mod tests {
         let (p2e_contract, cooperation_game_contract) = setup_contracts(&mut app, None);
         let mut config = cw_game_lifecycle::state::GameConfig::default();
         config.max_players = Some(2);
-        config.round_expiry_duration = None;
+        config.max_rounds = 1;
         let msg =
             crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::CreateGame {
                 config,
@@ -415,5 +415,34 @@ mod tests {
             amount: Some(Uint128::new(100)),
         });
         app.execute_contract(p2.clone(), cooperation_game_contract.addr(), &msg, &[]).unwrap();
+
+        // player 1 reveals the round
+        let msg = crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::RevealRound {
+            game_id: 0,
+            value: "cooperate".to_string(),
+            nonce,
+        });
+        app.execute_contract(p1.clone(), cooperation_game_contract.addr(), &msg, &[]).unwrap();
+
+        // player 2 reveals the round
+        let msg = crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::RevealRound {
+            game_id: 0,
+            value: "cooperate".to_string(),
+            nonce,
+        });
+        app.execute_contract(p2.clone(), cooperation_game_contract.addr(), &msg, &[]).unwrap();
+
+        // check game status, since the game has only one round, it should be finished
+        let game_status: cw_game_lifecycle::state::GameStatus = app
+            .wrap()
+            .query_wasm_smart(cooperation_game_contract.addr(), &crate::msg::QueryMsg::GetGameStatus { game_id: 0 })
+            .unwrap();
+        assert_eq!(game_status, cw_game_lifecycle::state::GameStatus::RoundsFinished);
+
+        // player 1 can end the game
+        let msg = crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::EndGame {
+            game_id: 0,
+        });
+        app.execute_contract(p1.clone(), cooperation_game_contract.addr(), &msg, &[]).unwrap();
     }
 }

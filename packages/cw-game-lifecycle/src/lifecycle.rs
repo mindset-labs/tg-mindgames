@@ -28,6 +28,7 @@ pub trait GameLifecycle {
         )?;
         OWNER.save(deps.storage, &info.sender)?;
         GAME_ID_COUNTER.save(deps.storage, &0)?;
+        ADMINS.save(deps.storage, &vec![])?;
 
         Ok(Response::new().add_attribute("action", "instantiate"))
     }
@@ -333,7 +334,7 @@ pub trait GameLifecycle {
 
     fn end_game(
         deps: DepsMut,
-        _env: Env,
+        env: Env,
         info: MessageInfo,
         game_id: u64,
     ) -> Result<Response, ContractError> {
@@ -347,6 +348,7 @@ pub trait GameLifecycle {
             (GameStatus::RoundsFinished, _) | (_, true) => {
                 game.status = GameStatus::Ended;
                 GAMES.save(deps.storage, game_id, &game)?;
+                Self::calculate_rewards_and_winners(deps, env, info, &mut game)?;
             }
             _ => {
                 return Err(ContractError::CannotCloseGame {
@@ -424,52 +426,7 @@ pub trait GameLifecycle {
         round_id: u64,
         player: Addr,
     ) -> Result<bool, ContractError> {
-        //TODO: check what currency is used for the deposit
-        //       * if it's not the native token $COREUM, we need to check if the Smart Token contract is whitelisted
-        //       * if it's not whitelisted, return an error
-
-        // // Check if min_deposit is required and validate user's deposit
-        // if config_clone.min_deposit > Uint128::zero() {
-        //     // Check if user sent any funds
-        //     if info.funds.is_empty() {
-        //         return Err(ContractError::NoFundsProvided {});
-        //     }
-
-        //     // Find matching deposit denomination
-        //     let deposit = info
-        //         .funds
-        //         .iter()
-        //         .find(|coin| coin.denom == config_clone.min_deposit.denom)
-        //         .ok_or(ContractError::InvalidDenom {
-        //             expected: config_clone.min_deposit.denom.clone(),
-        //         })?;
-
-        //     // Validate deposit amount meets minimum
-        //     if deposit.amount < config_clone.min_deposit {
-        //         return Err(ContractError::InsufficientFunds {
-        //             expected: config_clone.min_deposit,
-        //             received: deposit.amount,
-        //         });
-        //     }
-
-        //     // Deposit the funds in the escrow
-        //     let escrow_key = (game_id, sender);
-        //     let escrow = ESCROW
-        //         .load(deps.storage, escrow_key.clone())
-        //         .unwrap_or_default();
-        //     ESCROW.save(
-        //         deps.storage,
-        //         escrow_key,
-        //         &Coin {
-        //             denom: deposit.denom.clone(),
-        //             amount: escrow.amount + deposit.amount,
-        //         },
-        //     )?;
-
-        //     // Set initial escrow amount
-        //     game.total_escrow = config_clone.min_deposit.clone();
-        // }
-
+        // Each game must implement its own logic to process the round deposit
         Ok(true)
     }
 
@@ -479,6 +436,7 @@ pub trait GameLifecycle {
         info: MessageInfo,
         game: &Game,
     ) -> Result<bool, ContractError> {
+        // Each game must implement its own logic to calculate the rewards and winners
         Ok(true)
     }
 }
