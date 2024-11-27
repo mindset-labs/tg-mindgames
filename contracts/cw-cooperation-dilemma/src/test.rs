@@ -2,6 +2,8 @@
 mod tests {
     use cosmwasm_std::{coins, Addr, Uint128};
     use cw_multi_test::{error::AnyResult, App, ContractWrapper, Executor};
+    use sha2::{Sha256, Digest};
+    use hex;
 
     ///
     /// A wrapper around the code ID of the P2E token contract
@@ -154,6 +156,25 @@ mod tests {
             .instantiate(app, owner.clone(), "test", &p2e_contract)
             .unwrap();
         (p2e_contract, cooperation_game_contract)
+    }
+
+    fn join_game(app: &mut App, game_contract: &CooperationGameContract, p2e_contract: &P2ETokenContract, players: Vec<Addr>) {
+        players.iter().for_each(|p| {
+            // increase allowance for the game contract
+            let msg = cw_p2e::msg::ExecuteMsg::IncreaseAllowance {
+                spender: game_contract.addr().to_string(),
+                amount: Uint128::new(10_000),
+                expires: None,
+            };
+            app.execute_contract(p.clone(), p2e_contract.addr(), &msg, &[]).unwrap();
+
+            // join the game
+            let msg = crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::JoinGame {
+                game_id: 0,
+                telegram_id: p.to_string(),
+            });
+            app.execute_contract(p.clone(), game_contract.addr(), &msg, &[]).unwrap();
+        });
     }
 
     #[test]
@@ -343,5 +364,56 @@ mod tests {
         });
         let res = app.execute_contract(p3.clone(), cooperation_game_contract.addr(), &msg, &[]);
         assert!(res.is_err());
+    }
+
+    #[test]
+    fn dilemma_contract_basic_game_flow() {
+        let mut app = mock_app();
+        let p1 = app.api().addr_make(&"player_1".to_string());
+        let p2 = app.api().addr_make(&"player_2".to_string());
+        let (p2e_contract, cooperation_game_contract) = setup_contracts(&mut app, None);
+        let mut config = cw_game_lifecycle::state::GameConfig::default();
+        config.max_players = Some(2);
+        config.round_expiry_duration = None;
+        let msg =
+            crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::CreateGame {
+                config,
+            });
+
+        // player 1 creates the game
+        app
+            .execute_contract(p1.clone(), cooperation_game_contract.addr(), &msg, &[])
+            .unwrap();
+        // 2 players join the game
+        join_game(&mut app, &cooperation_game_contract, &p2e_contract, vec![p1.clone(), p2.clone()]);
+        
+        // player 1 can start the game
+        let msg = crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::StartGame {
+            game_id: 0,
+        });
+        app.execute_contract(p1.clone(), cooperation_game_contract.addr(), &msg, &[]).unwrap();
+
+        // prepare value to commit, both players will commit the same value for test simplicity
+        let nonce = rand::random::<u64>();
+        let mut hasher = Sha256::new();
+        hasher.update("cooperate".as_bytes());
+        hasher.update(nonce.to_be_bytes());
+        let hash = hex::encode(hasher.finalize());
+
+        // player 1 commits to the round
+        let msg = crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::CommitRound {
+            game_id: 0,
+            value: hash.clone(),
+            amount: Some(Uint128::new(100)),
+        });
+        app.execute_contract(p1.clone(), cooperation_game_contract.addr(), &msg, &[]).unwrap();
+
+        // player 2 commits to the round
+        let msg = crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::CommitRound {
+            game_id: 0,
+            value: hash.clone(),
+            amount: Some(Uint128::new(100)),
+        });
+        app.execute_contract(p2.clone(), cooperation_game_contract.addr(), &msg, &[]).unwrap();
     }
 }

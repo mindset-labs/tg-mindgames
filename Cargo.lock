@@ -404,8 +404,11 @@ dependencies = [
  "cw2",
  "cw20",
  "cw20-base",
+ "hex",
+ "rand",
  "schemars",
  "serde",
+ "sha2",
  "thiserror 2.0.3",
 ]
 
@@ -978,6 +981,7 @@ version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404"
 dependencies = [
+ "libc",
  "rand_chacha",
  "rand_core",
 ]

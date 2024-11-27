@@ -1,4 +1,7 @@
-use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult, Uint128, WasmMsg};
+use cosmwasm_std::{
+    to_json_binary, Addr, Binary, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult,
+    Uint128, WasmMsg,
+};
 use cw_p2e::msg::ExecuteMsg as P2EExecuteMsg;
 
 use crate::error::ContractError;
@@ -92,7 +95,7 @@ pub trait GameLifecycle {
 
     fn start_game(
         deps: DepsMut,
-        _env: Env,
+        env: Env,
         _info: MessageInfo,
         game_id: u64,
     ) -> Result<Response, ContractError> {
@@ -104,8 +107,12 @@ pub trait GameLifecycle {
 
         game.status = GameStatus::InProgress;
         game.current_round = 1;
-        game.rounds
-            .push(GameRound::new(1, game.config.round_expiry_duration));
+        
+        let round_expiry = match game.config.round_expiry_duration {
+            Some(block_duration) => Some(env.block.height + block_duration),
+            None => None,
+        };
+        game.rounds.push(GameRound::new(1, round_expiry));
 
         GAMES.save(deps.storage, game_id, &game)?;
 
@@ -309,8 +316,9 @@ pub trait GameLifecycle {
         // if all rounds are finished, set the game status to RoundsFinished
         if game.current_round >= game.config.max_rounds {
             game.status = GameStatus::RoundsFinished;
-            events.push(Event::new("game_rounds_finished")
-                .add_attribute("game_id", game_id.to_string()));
+            events.push(
+                Event::new("game_rounds_finished").add_attribute("game_id", game_id.to_string()),
+            );
         }
 
         GAMES.save(deps.storage, game_id, &game)?;
