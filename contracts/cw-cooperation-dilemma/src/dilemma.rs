@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, DepsMut, Env, MessageInfo, Uint128};
+use cosmwasm_std::{Addr, Uint128};
 use cw_game_lifecycle::{lifecycle::GameLifecycle, state::Game, ContractError as LifecycleError};
 
 use crate::ContractError;
