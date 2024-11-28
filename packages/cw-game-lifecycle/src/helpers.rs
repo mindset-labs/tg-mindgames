@@ -37,6 +37,7 @@ impl Game {
             config,
             total_escrow: Uint128::zero(),
             player_escrow: vec![],
+            scores: HashMap::new(),
         }
     }
 }
@@ -60,6 +61,7 @@ pub trait GameRewards {
 impl Default for GameConfig {
     fn default() -> Self {
         Self {
+            game_joining_fee: None,
             min_deposit: Uint128::zero(),
             max_players: Some(5),
             min_players: 2,
@@ -69,6 +71,14 @@ impl Default for GameConfig {
             has_turns: false,
             skip_reveal: false,
         }
+    }
+}
+
+impl GameConfig {
+    pub fn default_with_join_fee(join_fee: Uint128) -> Self {
+        let mut default = Self::default();
+        default.game_joining_fee = Some(join_fee);
+        default
     }
 }
 

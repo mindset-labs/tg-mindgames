@@ -1,4 +1,11 @@
-use cosmwasm_std::{to_json_binary, Addr, Binary, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult, Uint128};
+use std::borrow::Borrow;
+use std::collections::HashMap;
+
+use cosmwasm_std::{
+    to_json_binary, Addr, Binary, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult,
+    Uint128, WasmMsg,
+};
+use cw_p2e::msg::ExecuteMsg as P2EExecuteMsg;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -19,10 +26,12 @@ pub trait GameLifecycle {
             &GameMetadata {
                 base_url: msg.base_url,
                 image_url: msg.image_url,
+                token_contract: msg.token_contract,
             },
         )?;
         OWNER.save(deps.storage, &info.sender)?;
         GAME_ID_COUNTER.save(deps.storage, &0)?;
+        ADMINS.save(deps.storage, &vec![])?;
 
         Ok(Response::new().add_attribute("action", "instantiate"))
     }
@@ -38,7 +47,7 @@ pub trait GameLifecycle {
             ExecuteMsg::JoinGame {
                 game_id,
                 telegram_id,
-            } => Self::join_game(deps, info, game_id, telegram_id),
+            } => Self::join_game(deps, env, info, game_id, telegram_id),
             ExecuteMsg::StartGame { game_id } => Self::start_game(deps, env, info, game_id),
             ExecuteMsg::CommitRound {
                 game_id,
@@ -90,7 +99,7 @@ pub trait GameLifecycle {
 
     fn start_game(
         deps: DepsMut,
-        _env: Env,
+        env: Env,
         _info: MessageInfo,
         game_id: u64,
     ) -> Result<Response, ContractError> {
@@ -102,8 +111,12 @@ pub trait GameLifecycle {
 
         game.status = GameStatus::InProgress;
         game.current_round = 1;
-        game.rounds
-            .push(GameRound::new(1, game.config.round_expiry_duration));
+
+        let round_expiry = match game.config.round_expiry_duration {
+            Some(block_duration) => Some(env.block.height + block_duration),
+            None => None,
+        };
+        game.rounds.push(GameRound::new(1, round_expiry));
 
         GAMES.save(deps.storage, game_id, &game)?;
 
@@ -114,6 +127,7 @@ pub trait GameLifecycle {
 
     fn join_game(
         deps: DepsMut,
+        env: Env,
         info: MessageInfo,
         game_id: u64,
         telegram_id: String,
@@ -134,13 +148,6 @@ pub trait GameLifecycle {
             return Err(ContractError::GameFull { game_id });
         }
 
-        // TODO: handle player joining fee by reading `game.config.min_deposit`
-        //         * should lock a certain amount of the player's funds if `min_deposit` is greater than 0
-        //         *
-        //         * should create an allowance for the game contract to spend some amount of the player's (locked) funds
-        //         * this can be done by calling `lock_funds` and `increase_allowance` on the cw20 token contract from here
-        //         * this contract will be whitelisted on the cw20 token contract as a minter / admin / spender
-
         // add the player to the game
         game.players.push((info.sender.clone(), telegram_id));
         // check if the game is ready to start and update the game status accordingly
@@ -150,10 +157,17 @@ pub trait GameLifecycle {
 
         GAMES.save(deps.storage, game_id, &game)?;
 
-        Ok(Response::new()
+        let mut response = Response::new()
             .add_attribute("action", "join_game")
             .add_attribute("game_id", game_id.to_string())
-            .add_attribute("player", info.sender.clone().to_string()))
+            .add_attribute("player", info.sender.clone().to_string());
+
+        if let Some(joining_fee_msg) = Self::process_joining_fee(deps, env, info, &mut game)? {
+            // transfer the joining fee to the game contract in the P2E token contract
+            response = response.add_message(joining_fee_msg);
+        }
+
+        Ok(response)
     }
 
     fn _commit_round(
@@ -290,6 +304,11 @@ pub trait GameLifecycle {
                 game_id: game_id,
                 round: game.current_round,
             });
+        } else if !Self::is_valid_reveal_choice(&value) {
+            return Err(ContractError::InvalidRevealChoice {
+                game_id,
+                round: game.current_round,
+            });
         }
 
         // push the revealed value and optionally close the round
@@ -306,8 +325,9 @@ pub trait GameLifecycle {
         // if all rounds are finished, set the game status to RoundsFinished
         if game.current_round >= game.config.max_rounds {
             game.status = GameStatus::RoundsFinished;
-            events.push(Event::new("game_rounds_finished")
-                .add_attribute("game_id", game_id.to_string()));
+            events.push(
+                Event::new("game_rounds_finished").add_attribute("game_id", game_id.to_string()),
+            );
         }
 
         GAMES.save(deps.storage, game_id, &game)?;
@@ -328,6 +348,7 @@ pub trait GameLifecycle {
     ) -> Result<Response, ContractError> {
         let is_admin = ADMINS.load(deps.storage)?.contains(&info.sender)
             || OWNER.load(deps.storage)? == info.sender;
+        let metadata = GAME_METADATA.load(deps.storage)?;
         let mut game = GAMES.load(deps.storage, game_id)?;
 
         // check if the game can be ended (must be in progress and max rounds, if set, is reached)
@@ -335,18 +356,37 @@ pub trait GameLifecycle {
             // admin can end the game at any time or if rounds are finished
             (GameStatus::RoundsFinished, _) | (_, true) => {
                 game.status = GameStatus::Ended;
-                GAMES.save(deps.storage, game_id, &game)?;
+                Self::calculate_rewards_and_winners(&mut game)?
             }
             _ => {
                 return Err(ContractError::CannotCloseGame {
                     reason: String::from("Rounds not finished!"),
                 });
             }
-        }
+        };
 
-        Ok(Response::new()
+        GAMES.save(deps.storage, game_id, &game)?;
+
+        let mut response = Response::new()
             .add_attribute("action", "end_game")
-            .add_attribute("game_id", game_id.to_string()))
+            .add_attribute("game_id", game_id.to_string());
+
+        // define winnings as events
+        let mut winnings_events = vec![];
+        game.scores.borrow().into_iter().for_each(|(id, score)| {
+            winnings_events.push(
+                Event::new("game_winnings")
+                    .add_attribute("game_id", game_id.to_string())
+                    .add_attribute("player", id.to_string())
+                    .add_attribute("score", score.to_string()),
+            );
+        });
+        response = response.add_events(winnings_events);
+
+        // distribute rewards
+        response = response.add_messages(Self::distribute_rewards(&metadata, &game.scores)?);
+
+        Ok(response)
     }
 
     // Queries
@@ -376,78 +416,73 @@ pub trait GameLifecycle {
     }
 
     // Helpers
+    fn is_valid_reveal_choice(_value: &String) -> bool {
+        // Each game must implement its own logic to validate the reveal choice
+        true
+    }
+
+    fn distribute_rewards(
+        metadata: &GameMetadata,
+        scores: &HashMap<Addr, Uint128>,
+    ) -> Result<Vec<WasmMsg>, ContractError> {
+        // transfer the rewards to the players from the game contract balance in the P2E token contract
+        let msgs = scores
+            .iter()
+            .map(|(player, score)| WasmMsg::Execute {
+                contract_addr: metadata.token_contract.to_string(),
+                msg: to_json_binary(&P2EExecuteMsg::MintRewards {
+                    amount: *score,
+                    recipient: player.to_string(),
+                }).unwrap(),
+                funds: vec![],
+            })
+            .collect();
+        Ok(msgs)
+    }
+
     fn process_joining_fee(
         deps: DepsMut,
         env: Env,
         info: MessageInfo,
-        game: &Game,
-    ) -> Result<bool, ContractError> {
-        Ok(true)
+        game: &mut Game,
+    ) -> Result<Option<WasmMsg>, ContractError> {
+        let metadata = GAME_METADATA.load(deps.storage)?;
+
+        if let Some(joining_fee) = game.config.game_joining_fee {
+            // transfer the joining fee to the game contract in the P2E token contract
+            let msg = WasmMsg::Execute {
+                contract_addr: metadata.token_contract.to_string(),
+                msg: to_json_binary(&P2EExecuteMsg::TransferFrom {
+                    owner: info.sender.to_string(),
+                    recipient: env.contract.address.to_string(),
+                    amount: joining_fee,
+                })?,
+                funds: vec![],
+            };
+            // keep track of the joining fee in the game's escrow
+            game.total_escrow += joining_fee;
+            game.player_escrow.push((info.sender, joining_fee));
+
+            return Ok(Some(msg));
+        }
+
+        Ok(None)
     }
 
     fn process_round_deposit(
-        deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
-        game: &Game,
-        round_id: u64,
-        player: Addr,
+        _deps: DepsMut,
+        _env: Env,
+        _info: MessageInfo,
+        _game: &Game,
+        _round_id: u64,
+        _player: Addr,
     ) -> Result<bool, ContractError> {
-        //TODO: check what currency is used for the deposit
-        //       * if it's not the native token $COREUM, we need to check if the Smart Token contract is whitelisted
-        //       * if it's not whitelisted, return an error
-
-        // // Check if min_deposit is required and validate user's deposit
-        // if config_clone.min_deposit > Uint128::zero() {
-        //     // Check if user sent any funds
-        //     if info.funds.is_empty() {
-        //         return Err(ContractError::NoFundsProvided {});
-        //     }
-
-        //     // Find matching deposit denomination
-        //     let deposit = info
-        //         .funds
-        //         .iter()
-        //         .find(|coin| coin.denom == config_clone.min_deposit.denom)
-        //         .ok_or(ContractError::InvalidDenom {
-        //             expected: config_clone.min_deposit.denom.clone(),
-        //         })?;
-
-        //     // Validate deposit amount meets minimum
-        //     if deposit.amount < config_clone.min_deposit {
-        //         return Err(ContractError::InsufficientFunds {
-        //             expected: config_clone.min_deposit,
-        //             received: deposit.amount,
-        //         });
-        //     }
-
-        //     // Deposit the funds in the escrow
-        //     let escrow_key = (game_id, sender);
-        //     let escrow = ESCROW
-        //         .load(deps.storage, escrow_key.clone())
-        //         .unwrap_or_default();
-        //     ESCROW.save(
-        //         deps.storage,
-        //         escrow_key,
-        //         &Coin {
-        //             denom: deposit.denom.clone(),
-        //             amount: escrow.amount + deposit.amount,
-        //         },
-        //     )?;
-
-        //     // Set initial escrow amount
-        //     game.total_escrow = config_clone.min_deposit.clone();
-        // }
-
+        // Each game must implement its own logic to process the round deposit
         Ok(true)
     }
 
-    fn calculate_rewards_and_winners(
-        deps: DepsMut,
-        env: Env,
-        info: MessageInfo,
-        game: &Game,
-    ) -> Result<bool, ContractError> {
+    fn calculate_rewards_and_winners(_game: &mut Game) -> Result<bool, ContractError> {
+        // Each game must implement its own logic to calculate the rewards and winners
         Ok(true)
     }
 }

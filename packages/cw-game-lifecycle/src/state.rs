@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Uint128};
 use cw_storage_plus::{Item, Map};
@@ -14,6 +16,7 @@ pub const LEADERBOARD: Map<String, (Addr, Uint128)> = Map::new("leaderboard"); /
 pub struct GameMetadata {
     pub base_url: String,
     pub image_url: String,
+    pub token_contract: Addr,
 }
 
 #[cw_serde]
@@ -27,6 +30,7 @@ pub struct Game {
     pub creator: Addr,
     pub total_escrow: Uint128, // Total escrowed funds for this game
     pub player_escrow: Vec<(Addr, Uint128)>, // (player, escrowed funds)
+    pub scores: HashMap<Addr, Uint128>, // (player, score)
 }
 
 #[cw_serde]
@@ -57,7 +61,8 @@ pub enum GameStatus {
 
 #[cw_serde]
 pub struct GameConfig {
-    pub min_deposit: Uint128, // Changed to Coin to represent native Coreum token
+    pub game_joining_fee: Option<Uint128>,
+    pub min_deposit: Uint128,
     pub max_players: Option<u8>,
     pub min_players: u8,
     pub round_expiry_duration: Option<u64>, //in Blocks

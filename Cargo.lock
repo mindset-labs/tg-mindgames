@@ -398,13 +398,17 @@ dependencies = [
  "cw-game-lifecycle",
  "cw-multi-test",
  "cw-ownable",
+ "cw-p2e",
  "cw-storage-plus",
  "cw-utils",
  "cw2",
  "cw20",
  "cw20-base",
+ "hex",
+ "rand",
  "schemars",
  "serde",
+ "sha2",
  "thiserror 2.0.3",
 ]
 
@@ -416,6 +420,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
  "cw-ownable",
+ "cw-p2e",
  "cw-storage-plus",
  "cw-utils",
  "cw2",
@@ -472,6 +477,23 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "cw-p2e"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-storage-plus",
+ "cw-utils",
+ "cw2",
+ "cw20",
+ "cw20-base",
+ "schemars",
+ "serde",
+ "thiserror 2.0.3",
 ]
 
 [[package]]
@@ -959,6 +981,7 @@ version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404"
 dependencies = [
+ "libc",
  "rand_chacha",
  "rand_core",
 ]
