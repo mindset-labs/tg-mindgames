@@ -13,7 +13,7 @@ use cw20_base::allowances::{
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::execute::{execute_claim_rewards, execute_stake, execute_unlock};
+use crate::execute::{execute_authorize_rewards_issuer, execute_claim_rewards, execute_mint_rewards, execute_stake, execute_unlock};
 use crate::helpers::check_available_balance;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::query::{query_available_balance, query_reward, query_staked_balance};
@@ -101,6 +101,10 @@ pub fn execute(
             execute_claim_rewards(deps, env, info)?,
         ExecuteMsg::Unlock {} => 
             execute_unlock(deps, env, info)?,
+        ExecuteMsg::AuthorizeRewardsIssuer { address } => 
+            execute_authorize_rewards_issuer(deps, env, info, address)?,
+        ExecuteMsg::MintRewards { amount, recipient } => 
+            execute_mint_rewards(deps, env, info, amount, recipient)?,
     };
 
     Ok(response)

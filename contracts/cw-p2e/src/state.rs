@@ -29,3 +29,6 @@ pub struct LockedBalance {
 
 // Locked Balances
 pub const LOCKED_BALANCES: Map<&Addr, LockedBalance> = Map::new("locked_balances");
+
+// Addresses authorized to mint rewards
+pub const AUTHORIZED_REWARDS_ISSUERS: Map<&Addr, bool> = Map::new("authorized_rewards_issuers");

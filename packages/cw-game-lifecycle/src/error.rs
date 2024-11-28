@@ -53,4 +53,7 @@ pub enum ContractError {
 
     #[error("Round reveal mismatch")]
     RoundRevealMismatch{game_id: u64, round: u8},
+
+    #[error("Invalid reveal choice")]
+    InvalidRevealChoice { game_id: u64, round: u8 },
 }

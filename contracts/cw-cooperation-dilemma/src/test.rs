@@ -155,6 +155,10 @@ mod tests {
         let cooperation_game_contract = cooperation_game_code_id
             .instantiate(app, owner.clone(), "test", &p2e_contract)
             .unwrap();
+        // set allowance for the game contract to transfer tokens from the owner to players (for rewards)
+        let msg = cw_p2e::msg::ExecuteMsg::AuthorizeRewardsIssuer { address: cooperation_game_contract.addr().to_string() };
+        app.execute_contract(owner.clone(), p2e_contract.addr(), &msg, &[]).unwrap();
+
         (p2e_contract, cooperation_game_contract)
     }
 
@@ -382,6 +386,8 @@ mod tests {
         let p1 = app.api().addr_make(&"player_1".to_string());
         let p2 = app.api().addr_make(&"player_2".to_string());
         let (p2e_contract, cooperation_game_contract) = setup_contracts(&mut app, None);
+
+        // create the game
         let mut config = cw_game_lifecycle::state::GameConfig::default();
         config.max_players = Some(2);
         config.max_rounds = 1;
@@ -454,5 +460,15 @@ mod tests {
             game_id: 0,
         });
         app.execute_contract(p1.clone(), cooperation_game_contract.addr(), &msg, &[]).unwrap();
+
+        // check if the game rewards are distributed by querying the p2e contract
+        let balance: cw20::BalanceResponse = app.wrap().query_wasm_smart(p2e_contract.addr(), &cw_p2e::msg::QueryMsg::Balance {
+            address: p1.to_string(),
+        }).unwrap();
+        assert_eq!(balance.balance, Uint128::new(50));
+        let balance: cw20::BalanceResponse = app.wrap().query_wasm_smart(p2e_contract.addr(), &cw_p2e::msg::QueryMsg::Balance {
+            address: p2.to_string(),
+        }).unwrap();
+        assert_eq!(balance.balance, Uint128::new(50));
     }
 }

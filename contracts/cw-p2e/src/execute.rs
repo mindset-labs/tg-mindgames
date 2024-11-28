@@ -1,7 +1,7 @@
 use cosmwasm_std::{attr, DepsMut, Env, MessageInfo, Response, Uint128};
 use cw20_base::{contract::execute_mint, state::BALANCES};
 
-use crate::{query::query_reward, state::{StakedBalance, STAKED_BALANCES}, ContractError};
+use crate::{query::query_reward, state::{StakedBalance, AUTHORIZED_REWARDS_ISSUERS, STAKED_BALANCES}, ContractError};
 
 pub fn execute_stake(deps: DepsMut, env: Env, info: MessageInfo, amount: Uint128) -> Result<Response, ContractError> {
     BALANCES.update(deps.storage, &info.sender, |balance| -> Result<Uint128, ContractError> {
@@ -58,4 +58,30 @@ pub fn execute_claim_rewards(deps: DepsMut, env: Env, info: MessageInfo) -> Resu
 
 pub fn execute_unlock(_deps: DepsMut, _env: Env, _info: MessageInfo) -> Result<Response, ContractError> {
     unimplemented!()
+}
+
+pub fn execute_authorize_rewards_issuer(deps: DepsMut, _env: Env, _info: MessageInfo, address: String) -> Result<Response, ContractError> {
+    let addr = deps.api.addr_validate(&address)?;
+    AUTHORIZED_REWARDS_ISSUERS.save(deps.storage, &addr, &true)?;
+    Ok(Response::new().add_attributes(vec![
+        attr("action", "authorize_rewards_issuer"),
+        attr("address", address),
+    ]))
+}
+
+pub fn execute_mint_rewards(deps: DepsMut, env: Env, info: MessageInfo, amount: Uint128, recipient: String) -> Result<Response, ContractError> {
+    let authorized_issuer = AUTHORIZED_REWARDS_ISSUERS.may_load(deps.storage, &info.sender)?;
+
+    if !authorized_issuer.unwrap_or(false) {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    let mint_msg = MessageInfo { sender: env.contract.address.clone(), funds: vec![] };
+    execute_mint(deps, env, mint_msg, recipient.clone(), amount)?;
+
+    Ok(Response::new().add_attributes(vec![
+        attr("action", "mint_rewards"),
+        attr("mint_amount", amount),
+        attr("recipient", recipient),
+    ]))
 }

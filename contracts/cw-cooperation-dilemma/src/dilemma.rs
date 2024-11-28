@@ -29,6 +29,11 @@ impl TryFrom<String> for CooperationDilemmaChoices {
 }
 
 impl GameLifecycle for CooperationDilemma {
+    fn is_valid_reveal_choice(value: &String) -> bool {
+        let choice = CooperationDilemmaChoices::try_from(value.clone());
+        choice.is_ok()
+    }
+
     fn calculate_rewards_and_winners(
         game: &mut Game,
     ) -> Result<bool, LifecycleError> {

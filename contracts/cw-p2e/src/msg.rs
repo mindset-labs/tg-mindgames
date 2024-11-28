@@ -41,6 +41,8 @@ pub enum ExecuteMsg {
     Unstake { amount: Uint128 },
     ClaimRewards {},
     Unlock {},
+    AuthorizeRewardsIssuer { address: String },
+    MintRewards { amount: Uint128, recipient: String },
 }
 
 #[cw_serde]

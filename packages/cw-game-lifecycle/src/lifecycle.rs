@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::collections::HashMap;
 
 use cosmwasm_std::{
@@ -303,6 +304,11 @@ pub trait GameLifecycle {
                 game_id: game_id,
                 round: game.current_round,
             });
+        } else if !Self::is_valid_reveal_choice(&value) {
+            return Err(ContractError::InvalidRevealChoice {
+                game_id,
+                round: game.current_round,
+            });
         }
 
         // push the revealed value and optionally close the round
@@ -342,6 +348,7 @@ pub trait GameLifecycle {
     ) -> Result<Response, ContractError> {
         let is_admin = ADMINS.load(deps.storage)?.contains(&info.sender)
             || OWNER.load(deps.storage)? == info.sender;
+        let metadata = GAME_METADATA.load(deps.storage)?;
         let mut game = GAMES.load(deps.storage, game_id)?;
 
         // check if the game can be ended (must be in progress and max rounds, if set, is reached)
@@ -360,9 +367,13 @@ pub trait GameLifecycle {
 
         GAMES.save(deps.storage, game_id, &game)?;
 
+        let mut response = Response::new()
+            .add_attribute("action", "end_game")
+            .add_attribute("game_id", game_id.to_string());
+
         // define winnings as events
         let mut winnings_events = vec![];
-        game.scores.into_iter().for_each(|(id, score)| {
+        game.scores.borrow().into_iter().for_each(|(id, score)| {
             winnings_events.push(
                 Event::new("game_winnings")
                     .add_attribute("game_id", game_id.to_string())
@@ -370,11 +381,12 @@ pub trait GameLifecycle {
                     .add_attribute("score", score.to_string()),
             );
         });
+        response = response.add_events(winnings_events);
 
-        Ok(Response::new()
-            .add_events(winnings_events)
-            .add_attribute("action", "end_game")
-            .add_attribute("game_id", game_id.to_string()))
+        // distribute rewards
+        response = response.add_messages(Self::distribute_rewards(&metadata, &game.scores)?);
+
+        Ok(response)
     }
 
     // Queries
@@ -404,6 +416,30 @@ pub trait GameLifecycle {
     }
 
     // Helpers
+    fn is_valid_reveal_choice(_value: &String) -> bool {
+        // Each game must implement its own logic to validate the reveal choice
+        true
+    }
+
+    fn distribute_rewards(
+        metadata: &GameMetadata,
+        scores: &HashMap<Addr, Uint128>,
+    ) -> Result<Vec<WasmMsg>, ContractError> {
+        // transfer the rewards to the players from the game contract balance in the P2E token contract
+        let msgs = scores
+            .iter()
+            .map(|(player, score)| WasmMsg::Execute {
+                contract_addr: metadata.token_contract.to_string(),
+                msg: to_json_binary(&P2EExecuteMsg::MintRewards {
+                    amount: *score,
+                    recipient: player.to_string(),
+                }).unwrap(),
+                funds: vec![],
+            })
+            .collect();
+        Ok(msgs)
+    }
+
     fn process_joining_fee(
         deps: DepsMut,
         env: Env,
@@ -445,9 +481,7 @@ pub trait GameLifecycle {
         Ok(true)
     }
 
-    fn calculate_rewards_and_winners(
-        _game: &mut Game,
-    ) -> Result<bool, ContractError> {
+    fn calculate_rewards_and_winners(_game: &mut Game) -> Result<bool, ContractError> {
         // Each game must implement its own logic to calculate the rewards and winners
         Ok(true)
     }
