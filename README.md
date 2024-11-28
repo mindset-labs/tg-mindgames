@@ -1,1 +1,1 @@
-# tg-mindgames
+# Telegram Mindgames
