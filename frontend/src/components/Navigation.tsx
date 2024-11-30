@@ -1,34 +1,54 @@
-import React from "react";
 import {
   GamepadIcon,
   Users2Icon,
   ArrowLeftRightIcon,
   Settings2Icon,
+  WalletIcon,
 } from "lucide-react";
 
-interface NavigationProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-}
+import { useNavigate, useLocation } from "react-router-dom";
 
-export default function Navigation({
-  activeTab,
-  onTabChange,
-}: NavigationProps) {
+export default function Navigation() {
+  const navigate = useNavigate();
+
   const tabs = [
-    { id: "games", icon: GamepadIcon, label: "Games" },
-    { id: "rooms", icon: Users2Icon, label: "Rooms" },
-    { id: "swaps", icon: ArrowLeftRightIcon, label: "Swaps" },
-    { id: "settings", icon: Settings2Icon, label: "Settings" },
+    {
+      id: "Wallet",
+      icon: WalletIcon,
+      label: "Wallet",
+      path: "/tg-app/wallet/home",
+    },
+    {
+      id: "games",
+      icon: GamepadIcon,
+      label: "Games",
+      path: "/tg-app/game",
+    },
+
+    {
+      id: "rooms",
+      icon: Users2Icon,
+      label: "Rooms",
+      path: "/tg-app/game/rooms",
+    },
+
+    {
+      id: "settings",
+      icon: Settings2Icon,
+      label: "Settings",
+      path: "/tg-app/settings",
+    },
   ];
+
+  const activeTab = useLocation().pathname;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-indigo-950/90 backdrop-blur-md border-t border-indigo-900">
       <div className="max-w-md mx-auto flex justify-around mb-2">
-        {tabs.map(({ id, icon: Icon, label }) => (
+        {tabs.map(({ id, icon: Icon, label, path }) => (
           <button
             key={id}
-            onClick={() => onTabChange(id)}
+            onClick={() => navigate(path)}
             className={`flex flex-col items-center py-3 px-5 transition-colors ${
               activeTab === id
                 ? "text-blue-400"

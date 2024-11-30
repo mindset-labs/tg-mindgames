@@ -22,6 +22,7 @@ import {
 } from "../utils/gameLogic";
 import GameOnboarding from "./GameOnboarding";
 import GameResult from "./GameResult";
+import Navigation from "./Navigation";
 
 interface GameSetupOptions {
   stake: number;
@@ -284,39 +285,40 @@ export default function Game() {
   };
 
   return (
-    <div
-      ref={gameAreaRef}
-      className="w-full h-full relative overflow-hidden bg-gradient-to-b from-indigo-950 via-blue-900 to-blue-800"
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
-      onClick={handleClick}
-      style={{ touchAction: "none" }}
-    >
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2220%22 height=%2220%22%3E%3Ccircle cx=%221%22 cy=%221%22 r=%221%22 fill=%22rgba(255,255,255,0.1)%22/%3E%3C/svg%3E')] opacity-50" />
+    <div className="flex flex-col h-screen bg-gradient-to-b from-indigo-950 via-blue-900 to-blue-800 text-white">
+      <div
+        ref={gameAreaRef}
+        className="w-full h-full relative overflow-hidden bg-gradient-to-b from-indigo-950 via-blue-900 to-blue-800"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onClick={handleClick}
+        style={{ touchAction: "none" }}
+      >
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2220%22 height=%2220%22%3E%3Ccircle cx=%221%22 cy=%221%22 r=%221%22 fill=%22rgba(255,255,255,0.1)%22/%3E%3C/svg%3E')] opacity-50" />
 
-      <Spaceship
-        position={spaceshipPosition}
-        isDragging={isDraggingRef.current}
-      />
-      {asteroids.map((asteroid) => (
-        <Asteroid key={asteroid.id} asteroid={asteroid} />
-      ))}
-      {lasers.map((laser) => (
-        <Laser key={laser.id} laser={laser} />
-      ))}
-      {explosions.map((explosion) => (
-        <Explosion
-          key={explosion.id}
-          position={explosion}
-          onComplete={() => handleExplosionComplete(explosion.id)}
+        <Spaceship
+          position={spaceshipPosition}
+          isDragging={isDraggingRef.current}
         />
-      ))}
+        {asteroids.map((asteroid) => (
+          <Asteroid key={asteroid.id} asteroid={asteroid} />
+        ))}
+        {lasers.map((laser) => (
+          <Laser key={laser.id} laser={laser} />
+        ))}
+        {explosions.map((explosion) => (
+          <Explosion
+            key={explosion.id}
+            position={explosion}
+            onComplete={() => handleExplosionComplete(explosion.id)}
+          />
+        ))}
 
-      <ScoreDisplay distance={distance} />
+        <ScoreDisplay distance={distance} />
 
-      {/* {gameOver && (
+        {/* {gameOver && (
         <div className="absolute inset-0 bg-black/75 flex flex-col items-center justify-center">
           <h2 className="text-3xl font-bold text-white mb-4">Game Over</h2>
           <p className="text-xl text-white mb-2">Distance: {distance}</p>
@@ -330,23 +332,25 @@ export default function Game() {
         </div>
       )} */}
 
-      {gameOver && (
-        <GameResult
-          distance={distance}
-          highScore={highScore}
-          stake={gameOptions.stake}
-          onPlayAgain={handleReturnToOnboarding}
-          onShare={handleShare}
-        />
-      )}
+        {gameOver && (
+          <GameResult
+            distance={distance}
+            highScore={highScore}
+            stake={gameOptions.stake}
+            onPlayAgain={handleReturnToOnboarding}
+            onShare={handleShare}
+          />
+        )}
 
-      {!gameStarted && isSettingUp && (
-        <GameOnboarding
-          onStart={resetGame}
-          options={gameOptions}
-          onOptionsChange={setGameOptions}
-        />
-      )}
+        {!gameStarted && isSettingUp && (
+          <GameOnboarding
+            onStart={resetGame}
+            options={gameOptions}
+            onOptionsChange={setGameOptions}
+          />
+        )}
+      </div>
+      <Navigation />
     </div>
   );
 }
