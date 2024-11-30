@@ -1,6 +1,8 @@
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { App } from "../../screens/Wallet";
 import Game from "../../components/Game";
+import { CreateWallet } from "../../screens/Wallet/Create";
+import { WalletHome } from "../../screens/Wallet/Home";
 
 const router = createBrowserRouter([
   {
@@ -8,9 +10,18 @@ const router = createBrowserRouter([
     element: <App />,
   },
   {
-    path: "/tg-app/wallet/home",
-    element: <div>Wallet Home</div>,
+    path: "/tg-app/landing",
+    element: <div>Landing</div>,
   },
+  {
+    path: "/tg-app/wallet/home",
+    element: <WalletHome />,
+  },
+  {
+    path: "/tg-app/wallet/create",
+    element: <CreateWallet />,
+  },
+
   {
     path: "/tg-app/wallet/lockscreen",
     element: <div>Rooms</div>,

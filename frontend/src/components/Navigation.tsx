@@ -1,7 +1,6 @@
 import {
   GamepadIcon,
   Users2Icon,
-  ArrowLeftRightIcon,
   Settings2Icon,
   WalletIcon,
 } from "lucide-react";
@@ -18,6 +17,7 @@ export default function Navigation() {
       label: "Wallet",
       path: "/tg-app/wallet/home",
     },
+
     {
       id: "games",
       icon: GamepadIcon,
