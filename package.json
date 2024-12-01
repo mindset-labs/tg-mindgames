@@ -8,6 +8,7 @@
   "dependencies": {
     "@cosmjs/amino": "^0.32.4",
     "@cosmjs/cosmwasm-stargate": "^0.32.4",
+    "@cosmjs/proto-signing": "^0.32.4",
     "@cosmwasm/ts-codegen": "^1.11.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
