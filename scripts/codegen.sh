@@ -26,6 +26,7 @@ for contract in ./contracts/*/; do
         (
             ts-codegen generate \
                 --plugin client \
+                --plugin message-composer \
                 --schema "$contract/schema" \
                 --out ./codegen \
                 --name $(basename "$contract") \
@@ -43,6 +44,7 @@ for package in ./packages/*/; do
         (
             ts-codegen generate \
                 --plugin client \
+                --plugin message-composer \
                 --schema "$package/schema" \
                 --out ./codegen \
                 --name $(basename "$package") \
