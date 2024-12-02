@@ -3,6 +3,7 @@ import { App } from "../../screens/Wallet";
 import Game from "../../components/Game";
 import { CreateWallet } from "../../screens/Wallet/Create";
 import { WalletHome } from "../../screens/Wallet/Home";
+import { Landing } from "../../screens/Wallet/Landing";
 
 const router = createBrowserRouter([
   {
@@ -11,7 +12,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/tg-app/landing",
-    element: <div>Landing</div>,
+    element: <Landing />,
   },
   {
     path: "/tg-app/wallet/home",
@@ -21,7 +22,6 @@ const router = createBrowserRouter([
     path: "/tg-app/wallet/create",
     element: <CreateWallet />,
   },
-
   {
     path: "/tg-app/wallet/lockscreen",
     element: <div>Rooms</div>,
