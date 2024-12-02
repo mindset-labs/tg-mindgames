@@ -16,12 +16,16 @@ should_skip() {
     return 1  # False: should not skip
 }
 
+# Clean up the codegen directory
+rm -rf ./codegen/*.ts
+
 # Loop through each directory in contracts/
 for contract in ./contracts/*/; do
     if [ -d "$contract" ] && ! should_skip "$(basename "$contract")"; then
+        # Generate the schema
         echo "Generating schema for $(basename "$contract")..."
         (cd "$contract" && cargo schema)
-
+        # Generate the typescript code
         echo "Generating typescript code for $(basename "$contract")..."
         (
             ts-codegen generate \
@@ -35,11 +39,13 @@ for contract in ./contracts/*/; do
     fi
 done
 
+# Loop through each directory in packages/
 for package in ./packages/*/; do
     if [ -d "$package" ]; then
+        # Generate the schema
         echo "Generating schema for $(basename "$package")..."
         (cd "$package" && cargo schema)
-
+        # Generate the typescript code
         echo "Generating typescript code for $(basename "$package")..."
         (
             ts-codegen generate \
