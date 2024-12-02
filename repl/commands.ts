@@ -1,11 +1,17 @@
-import REPLConnect from './REPLConnect'
+import fs from 'fs'
 import { coin } from '@cosmjs/proto-signing'
+import REPLConnect from './REPLConnect'
 import * as CWP2E from '../codegen/CwP2e.types'
 
 interface InstantiateP2EResult {
     contractAddress: string
     remainingBalance: string
     txHash: string
+}
+
+interface UploadContractResult {
+    txHash: string
+    codeId: number
 }
 
 export type InstantiateP2EOptions = Partial<CWP2E.InstantiateMsg>
@@ -37,5 +43,20 @@ export async function instantiateP2E(replConnect: REPLConnect, codeId: number, o
         contractAddress: result.contractAddress,
         remainingBalance: balance.amount,
         txHash: result.transactionHash,
+    }
+}
+
+// export async function instantiateDilemma(replConnect: REPLConnect, codeId: number, options: InstantiateDilemmaOptions): Promise<InstantiateDilemmaResult> {
+//     replConnect.checkConnection()
+// }
+
+export async function uploadContract(replConnect: REPLConnect, wasmPath: string): Promise<UploadContractResult> {
+    replConnect.checkConnection()
+    const accounts = await replConnect.wallet.getAccounts()
+    const result = await replConnect.signingClient.upload(accounts[0].address, fs.readFileSync(wasmPath), 'auto')
+
+    return {
+        txHash: result.transactionHash,
+        codeId: result.codeId,
     }
 }

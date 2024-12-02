@@ -1,13 +1,14 @@
 import dotenv from 'dotenv'
+import path from 'path'
 import { program, command } from 'bandersnatch'
 import REPLConnect from './repl/REPLConnect'
-import { instantiateP2E, InstantiateP2EOptions } from './repl/commands'
+import { instantiateP2E, InstantiateP2EOptions, uploadContract } from './repl/commands'
 
 dotenv.config()
 
 const RPC_URL = process.env.RPC_URL!
 const P2E_CODE_ID = parseInt(process.env.P2E_CODE_ID!)
-const P2E_CONTRACT_ADDRESS = process.env.P2E_CONTRACT_ADDRESS!
+const DILEMMA_CODE_ID = parseInt(process.env.DILEMMA_CODE_ID!)
 const SIGNER_PRIVATE_KEY = process.env.SIGNER_PRIVATE_KEY!
 
 let replConnect: REPLConnect
@@ -25,6 +26,17 @@ const repl = program()
             .description('Connect to the network and set up the wallet'),
     )
     .add(
+        command('upload')
+            .description('Upload a WASM contract')
+            .option('file', { prompt: 'Enter the path to the WASM file to upload' })
+            .action(async (args) => {
+                const wasmPath = path.resolve('artifacts', args.file as string)
+                console.log('Uploading ', wasmPath)
+                const result = await uploadContract(replConnect, wasmPath)
+                console.log(result)
+            })
+    )
+    .add(
         command('instantiate')
             .add(
                 command('p2e')
@@ -38,10 +50,10 @@ const repl = program()
                     }),
             )
             .add(
-                command('other')
-                    .description('Instantiate a P2E contract')
+                command('dilemma')
+                    .description('Instantiate a Dilemma contract')
                     .option('msg', { description: 'The instantiate message to use', optional: true })
-                    .option('code-id', { default: P2E_CODE_ID, prompt: 'Enter the code ID of the contract to instantiate' })
+                    .option('code-id', { default: DILEMMA_CODE_ID, prompt: 'Enter the code ID of the contract to instantiate' })
                     .action(async (args) => {
                         console.log(args)
                     }),
