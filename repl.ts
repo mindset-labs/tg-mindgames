@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
 import { program, command } from 'bandersnatch'
 import REPLConnect from './repl/REPLConnect'
-import { instantiateP2E } from './repl/commands'
+import { instantiateP2E, InstantiateP2EOptions } from './repl/commands'
 
 dotenv.config()
 
@@ -26,22 +26,26 @@ const repl = program()
     )
     .add(
         command('instantiate')
-            .option('contract', { default: 'p2e', options: ['p2e', 'dilemma'] })
-            .option('code-id', { default: P2E_CODE_ID })
-            .option('supply', { default: '1000000000000', description: 'The initial supply of the P2E token', optional: true })
-            .action(async (args) => {
-                switch (args['contract']) {
-                    case 'p2e':
-                        const result = await instantiateP2E(replConnect, args['code-id'])
+            .add(
+                command('p2e')
+                    .description('Instantiate a P2E contract')
+                    .option('msg', { description: 'The instantiate message to use', optional: true })
+                    .option('code-id', { default: P2E_CODE_ID, prompt: 'Enter the code ID of the contract to instantiate' })
+                    .action(async (args) => {
+                        const parsedMsg = JSON.parse(args['msg'] as string) as InstantiateP2EOptions
+                        const result = await instantiateP2E(replConnect, args['code-id'], parsedMsg)
                         console.log(result)
-                        break
-                    case 'dilemma':
-                        // await instantiateDilemma(replConnect, args['code-id'])
-                        break
-                    default:
-                        throw new Error(`Unknown contract: ${args['contract']}`)
-                }
-            })
+                    }),
+            )
+            .add(
+                command('other')
+                    .description('Instantiate a P2E contract')
+                    .option('msg', { description: 'The instantiate message to use', optional: true })
+                    .option('code-id', { default: P2E_CODE_ID, prompt: 'Enter the code ID of the contract to instantiate' })
+                    .action(async (args) => {
+                        console.log(args)
+                    }),
+            )
             .description('Instantiate a contract'),
     )
 

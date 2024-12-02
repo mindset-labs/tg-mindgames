@@ -8,7 +8,9 @@ interface InstantiateP2EResult {
     txHash: string
 }
 
-export async function instantiateP2E(replConnect: REPLConnect, codeId: number): Promise<InstantiateP2EResult> {
+export type InstantiateP2EOptions = Partial<CWP2E.InstantiateMsg>
+
+export async function instantiateP2E(replConnect: REPLConnect, codeId: number, options: InstantiateP2EOptions): Promise<InstantiateP2EResult> {
     replConnect.checkConnection()
     const accounts = await replConnect.wallet.getAccounts()
 
@@ -19,7 +21,10 @@ export async function instantiateP2E(replConnect: REPLConnect, codeId: number): 
         name: 'P2E Test',
         symbol: 'PTEX',
         reward_per_block: '10',
+        ...options,
     }
+
+    console.log('Instantiate message:', instantiateMsg)
 
     const result = await replConnect.signingClient.instantiate(accounts[0].address, codeId, instantiateMsg, 'P2E Test', {
         amount: [coin(0, 'uxion')],
