@@ -71,3 +71,8 @@ pub struct GameConfig {
     pub has_turns: bool,
     pub skip_reveal: bool,
 }
+
+#[cw_serde]
+pub struct Leaderboard {
+    pub leaderboard: Vec<(Addr, String, Uint128)>,
+}

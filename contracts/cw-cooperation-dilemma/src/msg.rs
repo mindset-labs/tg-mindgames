@@ -32,9 +32,9 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     #[returns(cw_game_lifecycle::state::Game)]
     GetGame { game_id: u64 },
-    #[returns(Vec<(Addr, String, u64)>)]
+    #[returns(cw_game_lifecycle::state::Leaderboard)]
     GetLeaderboard {},
-    #[returns(u8)]
+    #[returns(cw_game_lifecycle::state::GameRound)]
     GetCurrentRound { game_id: u64 },
     #[returns(cw_game_lifecycle::state::GameStatus)]
     GetGameStatus { game_id: u64 },
