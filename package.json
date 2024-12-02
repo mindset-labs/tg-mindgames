@@ -1,7 +1,7 @@
 {
   "name": "tg-mindgames",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "repl.ts",
   "repository": "git@github.com:mindset-labs/tg-mindgames.git",
   "author": "<faisal.al.tameemi@gmail.com>",
   "license": "MIT",
@@ -10,11 +10,12 @@
     "@cosmjs/cosmwasm-stargate": "^0.32.4",
     "@cosmjs/proto-signing": "^0.32.4",
     "@cosmwasm/ts-codegen": "^1.11.1",
+    "bandersnatch": "^2.0.0",
     "dotenv": "^16.4.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   },
   "scripts": {
-    "cli": "ts-node ./cli.ts"
+    "start:repl": "ts-node ./repl.ts"
   }
 }
