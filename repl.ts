@@ -2,13 +2,15 @@ import dotenv from 'dotenv'
 import path from 'path'
 import { program, command } from 'bandersnatch'
 import REPLConnect from './repl/REPLConnect'
-import { instantiateP2E, InstantiateP2EOptions, uploadContract } from './repl/commands'
+import { authorizeP2EMinter, executeContract, instantiateDilemma, InstantiateDilemmaOptions, instantiateP2E, InstantiateP2EOptions, uploadContract } from './repl/commands'
 
 dotenv.config()
 
 const RPC_URL = process.env.RPC_URL!
 const P2E_CODE_ID = parseInt(process.env.P2E_CODE_ID!)
+const P2E_CONTRACT_ADDRESS = process.env.P2E_CONTRACT_ADDRESS!
 const DILEMMA_CODE_ID = parseInt(process.env.DILEMMA_CODE_ID!)
+const DILEMMA_CONTRACT_ADDRESS = process.env.DILEMMA_CONTRACT_ADDRESS!
 const SIGNER_PRIVATE_KEY = process.env.SIGNER_PRIVATE_KEY!
 
 let replConnect: REPLConnect
@@ -29,10 +31,15 @@ const repl = program()
         command('upload')
             .description('Upload a WASM contract')
             .option('file', { prompt: 'Enter the path to the WASM file to upload' })
+            .option('amount', { prompt: 'The amount of uxion to send with the upload transaction', default: 0 })
+            .option('gas', { prompt: 'The gas limit to use for the upload transaction', default: '200000' })
             .action(async (args) => {
                 const wasmPath = path.resolve('artifacts', args.file as string)
                 console.log('Uploading ', wasmPath)
-                const result = await uploadContract(replConnect, wasmPath)
+                const result = await uploadContract(replConnect, wasmPath, {
+                    amount: args.amount,
+                    gas: args.gas,
+                })
                 console.log(result)
             })
     )
@@ -41,8 +48,8 @@ const repl = program()
             .add(
                 command('p2e')
                     .description('Instantiate a P2E contract')
-                    .option('msg', { description: 'The instantiate message to use', optional: true })
-                    .option('code-id', { default: P2E_CODE_ID, prompt: 'Enter the code ID of the contract to instantiate' })
+                    .option('msg', { prompt: 'The instantiate message to use', default: '{}' })
+                    .option('code-id', { default: P2E_CODE_ID, prompt: 'Enter the code ID of the contract to instantiate', type: 'number' })
                     .action(async (args) => {
                         const parsedMsg = JSON.parse(args['msg'] as string) as InstantiateP2EOptions
                         const result = await instantiateP2E(replConnect, args['code-id'], parsedMsg)
@@ -52,13 +59,43 @@ const repl = program()
             .add(
                 command('dilemma')
                     .description('Instantiate a Dilemma contract')
-                    .option('msg', { description: 'The instantiate message to use', optional: true })
+                    .option('p2e-contract', { prompt: 'The play-to-earn contract address to use', type: 'string' })
                     .option('code-id', { default: DILEMMA_CODE_ID, prompt: 'Enter the code ID of the contract to instantiate' })
                     .action(async (args) => {
-                        console.log(args)
+                        const parsedMsg: InstantiateDilemmaOptions = {
+                            token_contract: args['p2e-contract']!,
+                        }
+                        const result = await instantiateDilemma(replConnect, args['code-id'], parsedMsg)
+                        console.log(result)
                     }),
             )
             .description('Instantiate a contract'),
+    )
+    .add(
+        command('authorize-p2e-minter')
+            .description('Authorize a contract to be a minter of P2E tokens')
+            .option('contract', { default: P2E_CONTRACT_ADDRESS, prompt: 'The contract address to authorize', type: 'string' })
+            .option('minter', { default: DILEMMA_CONTRACT_ADDRESS, prompt: 'The minter address to authorize', type: 'string' })
+            .action(async (args) => {
+                const result = await authorizeP2EMinter(replConnect, args['contract'], args['minter'])
+                console.log(result)
+            }),
+    )
+    .add(
+        command('execute')
+            .description('Execute a contract via a transaction')
+            .option('contract', { prompt: 'The contract address to execute', type: 'string' })
+            .option('msg', { prompt: 'The message to execute the contract with', type: 'string' })
+            .option('amount', { prompt: 'The amount of uxion to send with the execute transaction', default: 0, type: 'number' })
+            .option('gas', { prompt: 'The gas limit to use for the execute transaction', default: '200000', type: 'string' })
+            .action(async (args) => {
+                const parsedMsg = JSON.parse(args['msg'] as string)
+                const result = await executeContract(replConnect, args['contract']!, parsedMsg, {
+                    amount: args.amount,
+                    gas: args.gas,
+                })
+                console.log(result)
+            }),
     )
 
 repl.repl()
