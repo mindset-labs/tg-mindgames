@@ -1,4 +1,3 @@
-import Navigation from "./components/Navigation";
 import "./index.css";
 import { Router } from "./providers/Router";
 

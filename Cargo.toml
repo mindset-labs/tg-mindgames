@@ -1,14 +1,14 @@
 [workspace]
-members = ["contracts/*", "packages/*"]
+members = ["contracts/cw-counter", "packages/*"]
 
 [workspace.package]
-version       = "0.18.0"
-edition       = "2021"
-license       = "MIT"
-repository    = "https://github.com/mindset-labs/tg-mindgames"
-homepage      = "https://mindsetlabs.io"
+version = "0.18.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/mindset-labs/tg-mindgames"
+homepage = "https://mindsetlabs.io"
 documentation = "https://mindsetlabs.io"
-rust-version  = "1.78"
+rust-version = "1.78"
 
 #[profile.release.package.cw-cooperation]
 #codegen-units = 1
