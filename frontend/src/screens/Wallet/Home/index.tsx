@@ -6,8 +6,11 @@ import {
 } from "@burnt-labs/abstraxion";
 import MindGamesLogo from "../../../assets/mind-games-logo.png";
 import Navigation from "../../../components/Navigation";
+import { useNavigate } from "react-router-dom";
 
 export const WalletHome = () => {
+  const navigate = useNavigate();
+
   const {
     data: { bech32Address },
     isConnected,
@@ -146,7 +149,10 @@ export const WalletHome = () => {
 
         {/* Action Buttons */}
         <div className="flex justify-center gap-6 w-full max-w-md mb-8">
-          <button className="flex flex-col items-center flex-1">
+          <button
+            onClick={() => navigate("/tg-app/wallet/receive")}
+            className="flex flex-col items-center flex-1"
+          >
             <div className="bg-gray-800/50 p-4 rounded-2xl mb-2 backdrop-blur-lg">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -186,7 +192,10 @@ export const WalletHome = () => {
             <span className="text-sm text-gray-300">Swap</span>
           </button>
 
-          <button className="flex flex-col items-center flex-1">
+          <button
+            onClick={() => navigate("/tg-app/wallet/send")}
+            className="flex flex-col items-center flex-1"
+          >
             <div className="bg-gray-800/50 p-4 rounded-2xl mb-2 backdrop-blur-lg">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
