@@ -2,14 +2,12 @@ import { useAbstraxionAccount } from "@burnt-labs/abstraxion";
 import { useNavigate } from "react-router-dom";
 import WebApp from "@twa-dev/sdk";
 import { useEffect, useState } from "react";
+import { Loader } from "../../components/Loader";
 
 export const App = () => {
-  //TODO: Routing to pages
-  // If first time opening game
-  // If Wallet Created
-  // If Wallet not Created
   const navigate = useNavigate();
   const [isFirstTimeOpeningApp, setIsFirstTimeOpeningApp] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const {
     data: { bech32Address },
@@ -27,32 +25,27 @@ export const App = () => {
         if (result) {
           setIsFirstTimeOpeningApp(false);
         }
+        setIsLoading(false);
       });
     } catch (error) {
       console.error(error);
+      setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    console.log({ isConnected, isConnecting });
-    //If is connected, navigate to wallet
-    if (isConnected) {
-      navigate("/tg-app/wallet/home");
+    if (!isLoading) {
+      if (isConnected) {
+        navigate("/tg-app/wallet/home");
+      } else if ((!isConnected && !isConnecting) || isFirstTimeOpeningApp) {
+        navigate("/tg-app/landing");
+      }
     }
-    //If is not connected && first time opening the app, navigate to landing page
-    else if (!isConnected && !isConnecting && isFirstTimeOpeningApp) {
-      navigate("/tg-app/landing");
-    } else {
-      navigate("/tg-app/landing");
-    }
-  }, [isConnected, isConnecting, isFirstTimeOpeningApp]);
+  }, [isConnected, isConnecting, isFirstTimeOpeningApp, isLoading]);
 
-  return (
-    //TODO: Add Loader
-    <div>
-      <h1>Main App</h1>
-      <p onClick={() => navigate("/tg-app/game")}>Go to Game</p>
-      <p onClick={() => navigate("/tg-app/wallet/home")}>Go to Wallet</p>
-    </div>
-  );
+  if (isLoading) {
+    return <Loader />;
+  }
+
+  return null;
 };

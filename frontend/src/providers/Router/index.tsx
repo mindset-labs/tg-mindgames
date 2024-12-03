@@ -1,9 +1,13 @@
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { App } from "../../screens/Wallet";
-import Game from "../../components/Game";
+import { Game } from "../../screens/Game";
 import { CreateWallet } from "../../screens/Wallet/Create";
 import { WalletHome } from "../../screens/Wallet/Home";
 import { Landing } from "../../screens/Wallet/Landing";
+import { Settings } from "../../screens/Settings";
+import { Swap } from "../../screens/Wallet/Swap";
+import { Receive } from "../../screens/Wallet/Receive";
+import { Send } from "lucide-react";
 
 const router = createBrowserRouter([
   {
@@ -28,19 +32,19 @@ const router = createBrowserRouter([
   },
   {
     path: "/tg-app/wallet/swap",
-    element: <div>Swap</div>,
+    element: <Swap />,
   },
   {
     path: "/tg-app/wallet/receive",
-    element: <div>Receive</div>,
+    element: <Receive />,
   },
   {
     path: "/tg-app/wallet/send",
-    element: <div>Send</div>,
+    element: <Send />,
   },
   {
     path: "/tg-app/settings",
-    element: <div>Settings</div>,
+    element: <Settings />,
   },
   {
     path: "/tg-app/game",

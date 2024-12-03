@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import WebApp from "@twa-dev/sdk";
 
 interface GyroscopeData {
   x: number;
@@ -22,14 +23,14 @@ export function useGyroscope(): GyroscopeData {
     // Try Telegram WebApp first
     const isTelegram = window.Telegram?.WebApp !== undefined;
     if (isTelegram) {
-      const webApp = window.Telegram.WebApp;
-      if (webApp.isVersionAtLeast('6.1')) {
+     
+      if (WebApp.isVersionAtLeast('6.1')) {
         // Disable vertical swipes and expand the view
        
-        webApp.requestGyroscope().then((isAvailable) => {
+        WebApp.Gyroscope.requestGyroscope().then((isAvailable) => {
           if (isAvailable) {
             setData(prev => ({ ...prev, isSupported: true, calibrate }));
-            webApp.onEvent('gyroscopeChanged', (event) => {
+            WebApp.onEvent('gyroscopeChanged', (event) => {
               setData(current => ({
                 isSupported: true,
                 calibrate,
@@ -39,7 +40,7 @@ export function useGyroscope(): GyroscopeData {
             });
           }
         });
-        return () => webApp.offEvent('gyroscopeChanged');
+        return () => WebApp.offEvent('gyroscopeChanged');
       }
     }
 

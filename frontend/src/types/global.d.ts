@@ -18,7 +18,7 @@ interface TelegramWebApp {
   disableClosingConfirmation: () => void;
   disableVerticalSwipes(): () => void;
   expand: () => void;
-  requestGyroscope: () => Promise<boolean>;
+  start: () => Promise<boolean>;
   onEvent: (eventType: string, callback: (event: any) => void) => void;
   offEvent: (eventType: string) => void;
   requestFullscreen: () => void;

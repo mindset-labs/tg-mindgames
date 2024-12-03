@@ -9,10 +9,11 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Navigation() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const tabs = [
     {
-      id: "Wallet",
+      id: "wallet",
       icon: WalletIcon,
       label: "Wallet",
       path: "/tg-app/wallet/home",
@@ -40,25 +41,27 @@ export default function Navigation() {
     },
   ];
 
-  const activeTab = useLocation().pathname;
+  const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-indigo-950/90 backdrop-blur-md border-t border-indigo-900">
-      <div className="max-w-md mx-auto flex justify-around mb-2">
-        {tabs.map(({ id, icon: Icon, label, path }) => (
-          <button
-            key={id}
-            onClick={() => navigate(path)}
-            className={`flex flex-col items-center py-3 px-5 transition-colors ${
-              activeTab === id
-                ? "text-blue-400"
-                : "text-gray-400 hover:text-gray-300"
-            }`}
-          >
-            <Icon className="w-6 h-6 mb-1" />
-            <span className="text-xs font-medium">{label}</span>
-          </button>
-        ))}
+    <nav className="fixed bottom-4 left-4 right-4">
+      <div className="max-w-md mx-auto bg-indigo-950/90 backdrop-blur-md rounded-2xl border border-indigo-900/50">
+        <div className="flex justify-around p-2">
+          {tabs.map(({ id, icon: Icon, label, path }) => (
+            <button
+              key={id}
+              onClick={() => navigate(path)}
+              className={`flex flex-col items-center py-2 px-4 rounded-xl transition-all ${
+                isActive(path)
+                  ? "text-blue-400 bg-indigo-900/50"
+                  : "text-gray-400 hover:text-gray-300 hover:bg-indigo-900/30"
+              }`}
+            >
+              <Icon className="w-5 h-5 mb-1" strokeWidth={2.5} />
+              <span className="text-xs font-medium">{label}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </nav>
   );
