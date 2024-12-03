@@ -2,7 +2,7 @@ import dotenv from 'dotenv'
 import path from 'path'
 import { program, command } from 'bandersnatch'
 import REPLConnect from './repl/REPLConnect'
-import { authorizeP2EMinter, executeContract, instantiateDilemma, InstantiateDilemmaOptions, instantiateP2E, InstantiateP2EOptions, uploadContract } from './repl/commands'
+import { airdropP2ETokens, authorizeP2EMinter, executeContract, instantiateDilemma, InstantiateDilemmaOptions, instantiateP2E, InstantiateP2EOptions, uploadContract } from './repl/commands'
 
 dotenv.config()
 
@@ -78,6 +78,17 @@ const repl = program()
             .option('minter', { default: DILEMMA_CONTRACT_ADDRESS, prompt: 'The minter address to authorize', type: 'string' })
             .action(async (args) => {
                 const result = await authorizeP2EMinter(replConnect, args['contract'], args['minter'])
+                console.log(result)
+            }),
+    )
+    .add(
+        command('airdrop-p2e-tokens')
+            .description('Issue some P2E token balance to a specific wallet address')
+            .option('contract', { default: P2E_CONTRACT_ADDRESS, prompt: 'The contract address to authorize', type: 'string' })
+            .option('recipient', { prompt: 'The address to receive the tokens', type: 'string' })
+            .option('amount', { prompt: 'The amount to send to the recipient', default: 10000 })
+            .action(async (args) => {
+                const result = await airdropP2ETokens(replConnect, args['contract'], args['recipient']!, args['amount'].toString())
                 console.log(result)
             }),
     )

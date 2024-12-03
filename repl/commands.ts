@@ -172,3 +172,26 @@ export async function authorizeP2EMinter(replConnect: REPLConnect, contractAddre
         txHash: result.transactionHash,
     }
 }
+
+export async function airdropP2ETokens(replConnect: REPLConnect, contractAddress: string, recipient: string, amount: string) {
+    replConnect.checkConnection()
+    const accounts = await replConnect.wallet.getAccounts()
+
+    const msg: CWP2E.ExecuteMsg = {
+        transfer: {
+            recipient,
+            amount,
+        }
+    }
+
+    const result = await replConnect.signingClient.execute(accounts[0].address, contractAddress, msg, {
+        amount: [coin(0, 'uxion')],
+        gas: '200000',
+    })
+
+    console.log('Airdrop P2E tokens result: ', result)
+
+    return {
+        txHash: result.transactionHash,
+    }
+}
