@@ -320,6 +320,11 @@ pub trait GameLifecycle {
         {
             round.status = GameRoundStatus::Ended;
             game.current_round += 1;
+            let round_expiry = match game.config.round_expiry_duration {
+                Some(block_duration) => Some(env.block.height + block_duration),
+                None => None,
+            };
+            game.rounds.push(GameRound::new(game.current_round, round_expiry));
         }
 
         // if all rounds are finished, set the game status to RoundsFinished

@@ -20,6 +20,15 @@ export default class Dilemma {
         this.gameClient = new DilemmaClient.CwCooperationDilemmaClient(this.replConnect.signingClient, accounts[0]!.address, this.gameContractAddress)
     }
 
+    getGameId() {
+        return this.gameId
+    }
+
+    async connect(gameId: number) {
+        this.gameId = Number(gameId)
+        await this.setGameClient()
+    }
+
     async createGame(config: Partial<DilemmaTypes.GameConfig> = {}) {
         if (!this.gameClient) {
             await this.setGameClient()
@@ -30,7 +39,7 @@ export default class Dilemma {
             has_turns: true,
             min_players: 2,
             max_players: 2,
-            max_rounds: 3,
+            max_rounds: 1,
             min_deposit: '0',
             round_expiry_duration: 1000,
             round_reward_multiplier: 1,
@@ -76,7 +85,7 @@ export default class Dilemma {
         return result
     }
 
-    async startGame(gameId: number | null) {
+    async startGame(gameId?: number) {
         if (!this.gameClient) {
             await this.setGameClient()
         }
@@ -175,6 +184,8 @@ export default class Dilemma {
         if (!this.gameClient) {
             await this.setGameClient()
         }
+
+        console.log('Getting game', gameId ?? this.gameId!)
 
         return this.gameClient.getGame({ gameId: gameId ?? this.gameId! })
     }

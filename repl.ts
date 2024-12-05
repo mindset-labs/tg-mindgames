@@ -18,7 +18,7 @@ const DILEMMA_CONTRACT_ADDRESS = process.env.DILEMMA_CONTRACT_ADDRESS!
 const SIGNER_PRIVATE_KEY = process.env.SIGNER_PRIVATE_KEY!
 
 let replConnect: REPLConnect
-let currentGame: Dilemma
+let currentGame: Dilemma | null = null
 
 const repl = program()
     .add(
@@ -117,6 +117,18 @@ const repl = program()
         command('dilemma')
             .description('Interact with a game')
             .add(
+                command('connect')
+                    .description('Connect to a game')
+                    .option('game-id', { prompt: 'The game ID to connect to', type: 'number' })
+                    .action(async (args) => {
+                        if (!currentGame) {
+                            currentGame = new Dilemma(replConnect, DILEMMA_CONTRACT_ADDRESS)
+                        }
+                        await currentGame.connect(args['game-id'])
+                        console.log('Connected to game', currentGame.getGameId())
+                    }),
+            )
+            .add(
                 command('join')
                     .description('Join a game')
                     .option('game-id', { prompt: 'The game ID to join', type: 'number' })
@@ -144,30 +156,24 @@ const repl = program()
             .add(
                 command('details')
                     .description('Get the details of the current game')
-                    .option('game-id', { prompt: 'The game ID to get details of', type: 'number', optional: true })
                     .action(async (args) => {
-                        if (!currentGame && !args['game-id']) {
+                        if (!currentGame?.getGameId()) {
                             throw new Error('You must specifiy a game ID or join / create a game before you can get details')
-                        } else if (!currentGame) {
-                            currentGame = new Dilemma(replConnect, DILEMMA_CONTRACT_ADDRESS)
                         }
 
-                        const result = await currentGame.getGame(args['game-id'])
+                        const result = await currentGame.getGame()
                         console.dir(result, { depth: null })
                     }),
             )
             .add(
                 command('start')
                     .description('Start a game')
-                    .option('game-id', { prompt: 'The game ID to start', type: 'number' })
                     .action(async (args) => {
-                        if (!currentGame && !args['game-id']) {
+                        if (!currentGame?.getGameId()) {
                             throw new Error('You must specifiy a game ID or join / create a game before you can get details')
-                        } else if (!currentGame) {
-                            currentGame = new Dilemma(replConnect, DILEMMA_CONTRACT_ADDRESS)
                         }
 
-                        const result = await currentGame.startGame(args['game-id'])
+                        const result = await currentGame?.startGame()
                         console.dir(result, { depth: null })
                     }),
             )
@@ -176,6 +182,10 @@ const repl = program()
                     .description('Play a round in a game')
                     .option('choice', { prompt: 'The choice to play', type: 'string' })
                     .action(async (args) => {
+                        if (!currentGame) {
+                            throw new Error('You must connect to a game before you can play a round')
+                        }
+
                         const result = await currentGame.commitRound(args['choice'] as DilemmaChoice)
                         console.dir(result, { depth: null })
                     }),
@@ -184,6 +194,10 @@ const repl = program()
                 command('reveal-round')
                     .description('Reveal a round in a game')
                     .action(async (args) => {
+                        if (!currentGame) {
+                            throw new Error('You must connect to a game before you can reveal a round')
+                        }
+
                         const result = await currentGame.revealRound()
                         console.dir(result, { depth: null })
                     }),
