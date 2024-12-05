@@ -68,7 +68,7 @@ export default class Dilemma {
             await this.setGameClient()
         }
 
-        this.gameId = gameId ?? this.gameId
+        this.gameId = Number(gameId ?? this.gameId)
 
         const result = await this.gameClient.client.execute(this.gameClient.sender, this.gameContractAddress, {
             lifecycle: {
@@ -174,7 +174,7 @@ export default class Dilemma {
             }
         }, {
             amount: [{ denom: 'uxion', amount: '0' }],
-            gas: '200000',
+            gas: '500000',
         })
 
         return result

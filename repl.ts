@@ -202,6 +202,18 @@ const repl = program()
                         console.dir(result, { depth: null })
                     }),
             )
+            .add(
+                command('end-game')
+                    .description('End game')
+                    .action(async (args) => {
+                        if (!currentGame) {
+                            throw new Error('You must connect to a game before you can reveal a round')
+                        }
+
+                        const result = await currentGame.endGame()
+                        console.dir(result, { depth: null })
+                    }),
+            )
     )
 
 repl.repl()
