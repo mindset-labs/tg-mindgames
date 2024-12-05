@@ -2,7 +2,11 @@ import dotenv from 'dotenv'
 import path from 'path'
 import { program, command } from 'bandersnatch'
 import REPLConnect from './repl/REPLConnect'
-import { airdropP2ETokens, authorizeP2EMinter, executeContract, instantiateDilemma, InstantiateDilemmaOptions, instantiateP2E, InstantiateP2EOptions, uploadContract } from './repl/commands'
+import { 
+    airdropP2ETokens, authorizeP2EMinter, executeContract, instantiateDilemma, 
+    InstantiateDilemmaOptions, instantiateP2E, InstantiateP2EOptions, uploadContract 
+} from './repl/commands'
+import Dilemma from './repl/Dilemma'
 
 dotenv.config()
 
@@ -14,6 +18,7 @@ const DILEMMA_CONTRACT_ADDRESS = process.env.DILEMMA_CONTRACT_ADDRESS!
 const SIGNER_PRIVATE_KEY = process.env.SIGNER_PRIVATE_KEY!
 
 let replConnect: REPLConnect
+let currentGame: Dilemma
 
 const repl = program()
     .add(
@@ -107,6 +112,50 @@ const repl = program()
                 })
                 console.log(result)
             }),
+    )
+    .add(
+        command('dilemma')
+            .description('Interact with a game')
+            .add(
+                command('join')
+                    .description('Join a game')
+                    .option('game-id', { prompt: 'The game ID to join', type: 'number' })
+                    .option('telegram-id', { prompt: 'The telegram ID to use for the game', type: 'string' })
+                    .action(async (args) => {
+                        if (!currentGame) {
+                            currentGame = new Dilemma(replConnect, DILEMMA_CONTRACT_ADDRESS)
+                        }
+                        const result = await currentGame.joinGame(args['game-id'], args['telegram-id']!)
+                        console.dir(result, { depth: null })
+                    }),
+            )
+            .add(
+                command('create')
+                    .description('Create a game')
+                    .option('telegram-id', { prompt: 'The telegram ID to use for the game', type: 'string' })
+                    .action(async (args) => {
+                        currentGame = new Dilemma(replConnect, DILEMMA_CONTRACT_ADDRESS)
+                        const result = await currentGame.createGame()
+                        const joinResult = await currentGame.joinGame(null, args['telegram-id']!)
+                        console.dir(result, { depth: null })
+                        console.dir(joinResult, { depth: null })
+                    }),
+            )
+            .add(
+                command('details')
+                    .description('Get the details of the current game')
+                    .option('game-id', { prompt: 'The game ID to get details of', type: 'number', optional: true })
+                    .action(async (args) => {
+                        if (!currentGame && !args['game-id']) {
+                            throw new Error('You must specifiy a game ID or join / create a game before you can get details')
+                        } else if (!currentGame) {
+                            currentGame = new Dilemma(replConnect, DILEMMA_CONTRACT_ADDRESS)
+                        }
+
+                        const result = await currentGame.getGame(args['game-id'])
+                        console.dir(result, { depth: null })
+                    }),
+            )
     )
 
 repl.repl()
