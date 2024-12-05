@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import {
   useAbstraxionAccount,
   useAbstraxionSigningClient,
@@ -7,22 +8,120 @@ import {
 import MindGamesLogo from "../../../assets/mind-games-logo.png";
 import Navigation from "../../../components/Navigation";
 import { useNavigate } from "react-router-dom";
+import XionLogo from "../../../assets/xion-logo.png";
+import CosmosLogo from "../../../assets/cosmos-logo.png";
+import OsmosisLogo from "../../../assets/osmosis-logo.png";
+import CoreumLogo from "../../../assets/coreum-logo.png";
+import { useSwipeable } from "react-swipeable";
+import {
+  queryAllChainBalances,
+  TokenBalance,
+} from "../../../helpers/Wallet/queryBalances";
+
+const lightningBorderStyles = `
+@keyframes lightningBorder {
+  0% {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  }
+  100% {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+  }
+}
+
+.lightning-border {
+  position: relative;
+  border: 2px solid transparent;
+  border-radius: 12px; /* Adjusted for rectangular logo */
+  animation: lightningBorder 5s infinite;
+  padding: 2px;
+}
+
+.lightning-border::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 12px; /* Adjusted for rectangular logo */
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: rotate 2s linear infinite;
+}
+`;
 
 export const WalletHome = () => {
   const navigate = useNavigate();
+  const [selectedChain, setSelectedChain] = useState("xion"); // Default chain
+  const [balances, setBalances] = useState<TokenBalance[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const {
     data: { bech32Address },
     isConnected,
-    isConnecting,
   } = useAbstraxionAccount();
 
   const { signArb, logout } = useAbstraxionSigningClient();
   const [, setShow] = useModal();
 
+  const chainAddresses = {
+    xion: "xion1...",
+    cosmos: "cosmos1...",
+    osmosis: "osmo1...",
+    coreum: "core1...",
+  };
+
+  const chainLogos = {
+    xion: XionLogo,
+    cosmos: CosmosLogo,
+    osmosis: OsmosisLogo,
+    coreum: CoreumLogo,
+  };
+
+  const chainNames = {
+    xion: "Xion",
+    cosmos: "Cosmos Hub",
+    osmosis: "Osmosis",
+    coreum: "Coreum",
+  };
+
+  const chainBackgrounds = {
+    xion: "bg-gradient-to-b from-[#160f28] to-black",
+    cosmos: "bg-gradient-to-b from-[#2a2a72] to-[#009ffd]",
+    osmosis: "bg-gradient-to-b from-[#1e3c72] to-[#2a5298]",
+    coreum: "bg-gradient-to-b from-[#ff7e5f] to-[#feb47b]",
+  };
+
+  const chainOrder = ["xion", "cosmos", "osmosis", "coreum"];
+
+  const handleSwipe = (direction: string) => {
+    const currentIndex = chainOrder.indexOf(selectedChain);
+    let newIndex = currentIndex;
+
+    if (direction === "LEFT") {
+      newIndex = (currentIndex + 1) % chainOrder.length;
+    } else if (direction === "RIGHT") {
+      newIndex = (currentIndex - 1 + chainOrder.length) % chainOrder.length;
+    }
+
+    setSelectedChain(chainOrder[newIndex]);
+  };
+
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => handleSwipe("LEFT"),
+    onSwipedRight: () => handleSwipe("RIGHT"),
+    preventDefaultTouchmoveEvent: true,
+    trackMouse: true,
+  });
+
   const copyToClipboard = () => {
-    if (bech32Address) {
-      navigator.clipboard.writeText(bech32Address);
+    if (chainAddresses[selectedChain]) {
+      navigator.clipboard.writeText(chainAddresses[selectedChain]);
       // Optionally add a toast/notification here
     }
   };
@@ -31,6 +130,34 @@ export const WalletHome = () => {
     if (!address) return "";
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
+
+  useEffect(() => {
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = lightningBorderStyles;
+    document.head.appendChild(styleSheet);
+    return () => {
+      document.head.removeChild(styleSheet);
+    };
+  }, []);
+
+  useEffect(() => {
+    const fetchBalances = async () => {
+      if (!bech32Address) return;
+
+      setIsLoading(true);
+      try {
+        const allBalances = await queryAllChainBalances(bech32Address);
+        console.log({ allBalances });
+        setBalances(allBalances);
+      } catch (error) {
+        console.error("Error fetching balances:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBalances();
+  }, [bech32Address]);
 
   if (!isConnected) {
     return (
@@ -68,15 +195,64 @@ export const WalletHome = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-gradient-to-b from-[#160f28] to-black text-white">
-      {/* Header with Logo and Settings */}
-      <div className="flex justify-between items-center p-4">
-        <img
-          src={MindGamesLogo}
-          alt="Mind Games Logo"
-          className="h-8 w-auto rounded-md"
-        />
-        <button onClick={logout} className="text-gray-400">
+    <div
+      {...swipeHandlers}
+      className={`flex flex-col min-h-screen w-full ${chainBackgrounds[selectedChain]} text-white`}
+    >
+      {/* Header with Logo, Chain Selector, and Settings */}
+      <div className="flex items-center justify-between p-4">
+        <div className="lightning-border">
+          <img
+            src={MindGamesLogo}
+            alt="Mind Games Logo"
+            className="h-8 w-auto rounded-md"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 bg-gray-800/50 rounded-lg p-2 backdrop-blur-lg flex-grow mx-4">
+          <img
+            src={chainLogos[selectedChain]}
+            alt={chainNames[selectedChain]}
+            className="h-6 w-6"
+          />
+          <select
+            value={selectedChain}
+            onChange={(e) => setSelectedChain(e.target.value)}
+            className="appearance-none bg-transparent text-white border-none focus:outline-none"
+          >
+            {chainOrder.map((chain) => (
+              <option key={chain} value={chain}>
+                {chainNames[chain]}
+              </option>
+            ))}
+          </select>
+          <div className="text-gray-400 flex items-center gap-2 ml-auto">
+            <span className="text-sm truncate max-w-[120px]">
+              {truncateAddress(chainAddresses[selectedChain])}
+            </span>
+            <button onClick={copyToClipboard}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button
+          onClick={() => navigate("/tg-app/settings")}
+          className="text-gray-400"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-6 w-6"
@@ -100,35 +276,19 @@ export const WalletHome = () => {
         </button>
       </div>
 
-      {/* Wallet Address Bar */}
-      <div className="flex items-center gap-2 px-4 mb-4">
-        <span className="text-sm text-gray-400">Wallet: </span>
-        <span className="text-sm text-gray-400 truncate max-w-[120px]">
-          {truncateAddress(bech32Address)}
-        </span>
-        <button className="text-gray-400" onClick={copyToClipboard}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-            />
-          </svg>
-        </button>
-      </div>
-
       {/* Main Content */}
       <div className="flex flex-col items-center flex-grow px-4">
         {/* Balance Display */}
         <div className="text-4xl font-bold my-8 flex items-center">
-          $0.00
+          {isLoading ? (
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+          ) : balances.length > 0 ? (
+            `$${balances
+              .reduce((acc, bal) => acc + parseFloat(bal.displayAmount) * 1, 0)
+              .toFixed(2)}`
+          ) : (
+            "$0.00"
+          )}
           <button className="ml-2 text-gray-400">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -224,35 +384,46 @@ export const WalletHome = () => {
           <button className="pb-1">Activity</button>
         </div>
 
-        {/* Seed Phrase Card */}
-        <div className="w-full bg-gray-800/30 rounded-2xl p-4 backdrop-blur-lg mb-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="bg-yellow-400/20 p-2 rounded-full">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-yellow-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                />
-              </svg>
+        {/* Add Token List Section */}
+        <div className="w-full max-w-md">
+          {isLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
             </div>
-            <div>
-              <h3 className="font-semibold">Seed phrase</h3>
-              <p className="text-sm text-gray-400">
-                Save it to avoid losing access to your wallet and funds
-              </p>
+          ) : balances.length > 0 ? (
+            <div className="space-y-4">
+              {balances.map((balance, index) => (
+                <div
+                  key={index}
+                  className="bg-gray-800/50 backdrop-blur-lg rounded-lg p-4 flex items-center justify-between"
+                >
+                  <div className="flex items-center space-x-3">
+                    <img
+                      //TODO: change this to the correct logo
+                      src={chainLogos.coreum}
+                      alt={balance.chainInfo.chainName}
+                      className="w-8 h-8 rounded-full"
+                    />
+                    <div>
+                      <div className="text-white font-medium">
+                        {balance.displayAmount} {balance.chainInfo.displayDenom}
+                      </div>
+                      <div className="text-gray-400 text-sm">
+                        {balance.chainInfo.chainName}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    ≈ ${(parseFloat(balance.displayAmount) * 1).toFixed(2)}
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-          <button className="w-full bg-blue-500 text-white font-semibold py-3 rounded-full mt-2">
-            See phrase
-          </button>
+          ) : (
+            <div className="text-center text-gray-400 py-8">
+              No tokens found
+            </div>
+          )}
         </div>
       </div>
       <Navigation />

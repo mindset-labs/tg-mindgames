@@ -1,5 +1,5 @@
 [workspace]
-members = ["contracts/cw-counter", "packages/*"]
+members = ["contracts/xion-multichain-transactions"]
 
 [workspace.package]
 version = "0.18.0"

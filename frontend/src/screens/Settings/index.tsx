@@ -3,120 +3,107 @@ import {
   useAbstraxionSigningClient,
 } from "@burnt-labs/abstraxion";
 import Navigation from "../../components/Navigation";
-import { useState, useEffect } from "react";
-import { TREASURY, CONTRACTS } from "../../constants/contracts";
+import { useState } from "react";
+import XionLogo from "../../assets/xion-logo.png";
+import CosmosLogo from "../../assets/cosmos-logo.png";
+import OsmosisLogo from "../../assets/osmosis-logo.png";
+import CoreumLogo from "../../assets/coreum-logo.png";
+import { motion } from "framer-motion";
 
 export const Settings = () => {
-  //Counter contract address
-  //const counterContractAddress = 'xion1suthl30z5jg7r5pxm9e2srjtms2p0ev9yen709yvmpg4el4ckw0qmd4xfk';
-  const { client } = useAbstraxionSigningClient();
+  const { logout } = useAbstraxionSigningClient();
   const { data: account } = useAbstraxionAccount();
-  const cw_counter_address = CONTRACTS.counterContract;
-  const [incrementResult, setIncrementResult] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [counterValue, setCounterValue] = useState<number | null>(null);
 
-  const queryCounter = async () => {
+  // Chain visibility state
+  const [chainVisibility, setChainVisibility] = useState({
+    xion: true,
+    cosmos: true,
+    osmosis: true,
+    coreum: true,
+  });
+
+  const chainConfigs = [
+    { id: "xion", name: "Xion", logo: XionLogo },
+    { id: "cosmos", name: "Cosmos Hub", logo: CosmosLogo },
+    { id: "osmosis", name: "Osmosis", logo: OsmosisLogo },
+    { id: "coreum", name: "Coreum", logo: CoreumLogo },
+  ];
+
+  const handleToggleChain = (chainId: string) => {
+    setChainVisibility((prev) => ({
+      ...prev,
+      [chainId]: !prev[chainId],
+    }));
+  };
+
+  const handleLogout = async () => {
     try {
-      const queryMsg = { get_count: {} };
-      const result = await client?.queryContractSmart(
-        cw_counter_address,
-        queryMsg
-      );
-      console.log("Query result:", result);
-      setCounterValue(result);
-      setError(null);
+      logout();
     } catch (error) {
-      console.error("Query error:", error);
-      setError(error.message || "Failed to query counter");
+      console.error("Logout error:", error);
     }
   };
 
-  // Add client dependency to useEffect
-  useEffect(() => {
-    if (client && cw_counter_address) {
-      console.log("Querying counter...");
-      queryCounter();
-    }
-  }, [client, cw_counter_address]);
-
-  // Separate useEffect for increment updates
-  useEffect(() => {
-    if (incrementResult) {
-      console.log("Increment detected, querying counter...");
-      queryCounter();
-    }
-  }, [incrementResult]);
-
-  async function incrementCounter() {
-    const msg = {
-      increment: {},
-    };
-
-    try {
-      const increment = await client?.execute(
-        account?.bech32Address,
-        cw_counter_address,
-        msg,
-        {
-          amount: [{ amount: "1", denom: "uxion" }],
-          gas: "500000",
-          granter: TREASURY.treasury,
-        },
-        "", // memo
-        []
-      );
-      console.log("Increment successful:", increment);
-      setIncrementResult(increment);
-      setError(null);
-    } catch (error) {
-      console.error(error);
-      setError(error.message || "An error occurred");
-    }
-  }
-
   return (
-    <div className="flex flex-col min-h-screen w-full bg-gradient-to-b from-[#160f28] to-black">
-      <div className="flex-1 px-4 py-8 max-w-7xl mx-auto w-full">
-        <h1 className="text-4xl font-bold text-white mb-8">Settings</h1>
-
-        <div className="bg-[#1F1830] rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold text-white mb-4">
-            Counter Management
-          </h2>
-
-          <div className="mb-4 text-white">
-            Current Count: {counterValue !== null ? counterValue : "Loading..."}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="flex flex-col min-h-screen w-full bg-gradient-to-b from-[#160f28] to-black relative"
+    >
+      <div className="absolute inset-0 overflow-y-auto">
+        <div className="flex flex-col items-center justify-start px-4 pt-8 pb-32 max-w-md mx-auto">
+          {/* Account Section */}
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center w-full mb-6">
+            <h2 className="text-white text-xl mb-4">Account</h2>
+            <div className="w-full font-mono text-sm text-gray-400 break-all text-center mb-4">
+              {account?.bech32Address}
+            </div>
+            <button
+              onClick={handleLogout}
+              className="w-full bg-red-500/20 hover:bg-red-500/30 text-red-500 py-3 rounded-lg transition-colors"
+            >
+              Logout
+            </button>
           </div>
 
-          <button
-            onClick={incrementCounter}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
-          >
-            Increment Counter
-          </button>
-
-          {error && (
-            <div className="mt-4 p-4 bg-red-600 text-white rounded-lg">
-              {error}
+          {/* Chain Visibility Section */}
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center w-full">
+            <h2 className="text-white text-xl mb-4">Chain Visibility</h2>
+            <div className="w-full space-y-4">
+              {chainConfigs.map((chain) => (
+                <div
+                  key={chain.id}
+                  className="flex items-center justify-between p-3 bg-white/5 rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={chain.logo}
+                      alt={chain.name}
+                      className="h-6 w-6"
+                    />
+                    <span className="text-white">{chain.name}</span>
+                  </div>
+                  <button
+                    onClick={() => handleToggleChain(chain.id)}
+                    className={`w-12 h-6 rounded-full transition-colors ${
+                      chainVisibility[chain.id] ? "bg-blue-500" : "bg-gray-600"
+                    } relative`}
+                  >
+                    <div
+                      className={`absolute top-1 transition-transform ${
+                        chainVisibility[chain.id] ? "right-1" : "left-1"
+                      } w-4 h-4 bg-white rounded-full`}
+                    />
+                  </button>
+                </div>
+              ))}
             </div>
-          )}
-
-          {incrementResult && (
-            <div className="mt-4 p-4 bg-[#2A223F] rounded-lg overflow-x-auto">
-              <pre className="text-gray-300 text-sm">
-                {JSON.stringify(
-                  incrementResult,
-                  (_, value) =>
-                    typeof value === "bigint" ? value.toString() : value,
-                  2
-                )}
-              </pre>
-            </div>
-          )}
+          </div>
         </div>
       </div>
-      <Navigation />
-    </div>
+      <Navigation className="relative z-10" />
+    </motion.div>
   );
 };

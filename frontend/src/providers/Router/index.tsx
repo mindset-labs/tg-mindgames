@@ -7,7 +7,8 @@ import { Landing } from "../../screens/Wallet/Landing";
 import { Settings } from "../../screens/Settings";
 import { Swap } from "../../screens/Wallet/Swap";
 import { Receive } from "../../screens/Wallet/Receive";
-import { Send } from "lucide-react";
+import { Send } from "../../screens/Wallet/Send";
+import { Test } from "../../screens/Test";
 
 const router = createBrowserRouter([
   {
@@ -44,7 +45,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/tg-app/settings",
-    element: <Settings />,
+    element: <Test />,
   },
   {
     path: "/tg-app/game",
