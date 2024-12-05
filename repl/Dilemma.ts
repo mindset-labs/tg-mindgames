@@ -2,7 +2,7 @@ import ReplConnect from './REPLConnect'
 import * as DilemmaClient from '../codegen/CwCooperationDilemma.client'
 import * as DilemmaTypes from '../codegen/CwCooperationDilemma.types'
 
-enum DilemmaChoice {
+export enum DilemmaChoice {
     COOPERATE = 'cooperate',
     DEFECT = 'defect',
 }
@@ -66,6 +66,27 @@ export default class Dilemma {
                 join_game: {
                     game_id: this.gameId!,
                     telegram_id: telegramId,
+                }
+            }
+        }, {
+            amount: [{ denom: 'uxion', amount: '0' }],
+            gas: '200000',
+        })
+
+        return result
+    }
+
+    async startGame(gameId: number | null) {
+        if (!this.gameClient) {
+            await this.setGameClient()
+        }
+
+        this.gameId = gameId ?? this.gameId
+
+        const result = await this.gameClient.client.execute(this.gameClient.sender, this.gameContractAddress, {
+            lifecycle: {
+                start_game: {
+                    game_id: this.gameId!,
                 }
             }
         }, {

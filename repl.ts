@@ -6,7 +6,7 @@ import {
     airdropP2ETokens, authorizeP2EMinter, executeContract, instantiateDilemma, 
     InstantiateDilemmaOptions, instantiateP2E, InstantiateP2EOptions, uploadContract 
 } from './repl/commands'
-import Dilemma from './repl/Dilemma'
+import Dilemma, { DilemmaChoice } from './repl/Dilemma'
 
 dotenv.config()
 
@@ -153,6 +153,38 @@ const repl = program()
                         }
 
                         const result = await currentGame.getGame(args['game-id'])
+                        console.dir(result, { depth: null })
+                    }),
+            )
+            .add(
+                command('start')
+                    .description('Start a game')
+                    .option('game-id', { prompt: 'The game ID to start', type: 'number' })
+                    .action(async (args) => {
+                        if (!currentGame && !args['game-id']) {
+                            throw new Error('You must specifiy a game ID or join / create a game before you can get details')
+                        } else if (!currentGame) {
+                            currentGame = new Dilemma(replConnect, DILEMMA_CONTRACT_ADDRESS)
+                        }
+
+                        const result = await currentGame.startGame(args['game-id'])
+                        console.dir(result, { depth: null })
+                    }),
+            )
+            .add(
+                command('play-round')
+                    .description('Play a round in a game')
+                    .option('choice', { prompt: 'The choice to play', type: 'string' })
+                    .action(async (args) => {
+                        const result = await currentGame.commitRound(args['choice'] as DilemmaChoice)
+                        console.dir(result, { depth: null })
+                    }),
+            )
+            .add(
+                command('reveal-round')
+                    .description('Reveal a round in a game')
+                    .action(async (args) => {
+                        const result = await currentGame.revealRound()
                         console.dir(result, { depth: null })
                     }),
             )
