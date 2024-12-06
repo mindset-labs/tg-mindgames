@@ -6,6 +6,9 @@ import { AbstraxionProvider } from "@burnt-labs/abstraxion";
 import { TREASURY, CONTRACTS } from "./constants/contracts";
 import { createConfig, AbstractProvider } from "@abstract-money/react";
 import { xionProvider } from "@abstract-money/provider-xion";
+import { store } from "./app/store";
+import { Provider } from "react-redux";
+
 
 const abstractConfig = createConfig({
   apiUrl: "https://xion.api.abstract.money/graphql",
@@ -19,10 +22,12 @@ const config = {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
+   <Provider store={store}>
     <AbstraxionProvider config={config}>
       <AbstractProvider config={abstractConfig}>
         <App />
       </AbstractProvider>
-    </AbstraxionProvider>
+      </AbstraxionProvider>
+    </Provider>
   </StrictMode>
 );
