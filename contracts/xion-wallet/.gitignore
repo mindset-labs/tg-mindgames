@@ -1,0 +1,26 @@
+/target
+
+artifacts
+
+Cargo.lock
+
+.env
+
+.vscode
+.idea
+
+state.json
+
+typescript/node_modules
+
+# Exclude schema folders in contracts outside of frontend
+contracts/**/schema
+schema/
+
+# Include schema folders in frontend
+!/frontend/**
+
+build/
+
+.next
+# frontend/.next
