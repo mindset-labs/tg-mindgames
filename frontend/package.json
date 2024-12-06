@@ -14,6 +14,7 @@
     "@abstract-money/provider-xion": "^4.0.3",
     "@abstract-money/react": "^2.3.6",
     "@reduxjs/toolkit": "^2.4.0",
+    "@tanstack/react-query": "^5.62.2",
     "lucide-react": "^0.344.0",
     "qrcode.react": "^4.1.0",
     "react": "^18.3.1",
