@@ -14,26 +14,13 @@ import {
   COSMOS_PREFIXES,
 } from "../../../helpers/Wallet/generateCosmosAddresses";
 
-import { AbstraxionProvider } from "@burnt-labs/abstraxion";
-import { DirectSignResponse, makeSignBytes } from "@cosmjs/proto-signing";
 import { SignDoc } from "cosmjs-types/cosmos/tx/v1beta1/tx";
 
 import {
-  AADirectSigner,
-  AAccountData,
-  AAClient,
-  AAAlgo,
-  AADefaultSigner,
+  AADirectSigner
 } from "@burnt-labs/signers";
 
-import {
-  SigningCosmWasmClient,
-  OfflineDirectSigner,
-} from "@cosmjs/cosmwasm-stargate";
 
-import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
-
-import { SignArbSecp256k1HdWallet } from "@burnt-labs/abstraxion-core";
 
 export const Send = () => {
   const { client } = useAbstraxionSigningClient();
@@ -141,6 +128,8 @@ export const Send = () => {
     }
   };
 
+  client?.s
+
   // Add function to sign for other chains
   const signForOtherChain = async (chainId: string, message: string) => {
     try {
@@ -230,13 +219,11 @@ export const Send = () => {
     }
   }, [selectedChain]);
 
-  const abstraxionConfig = {
-    rpcUrl,
-    // ... any other config options you want to keep
-  } as const;
+  
+
 
   return (
-    <AbstraxionProvider config={abstraxionConfig}>
+    <>
       <div
         {...swipeHandlers}
         className={`flex flex-col min-h-screen w-full ${chainBackgrounds[selectedChain]}`}
@@ -376,6 +363,6 @@ export const Send = () => {
         </div>
       </div>
       <Navigation />
-    </AbstraxionProvider>
+    </>
   );
 };

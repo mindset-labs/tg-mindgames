@@ -21,6 +21,8 @@ export const Test = () => {
     console.log("Osmosis Address:", address);
   };
 
+  client?.sendTokens;
+
   useEffect(() => {
     generateCoreumAddress();
   }, []);

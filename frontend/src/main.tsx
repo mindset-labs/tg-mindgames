@@ -4,6 +4,13 @@ import App from "./App.tsx";
 import "./index.css";
 import { AbstraxionProvider } from "@burnt-labs/abstraxion";
 import { TREASURY, CONTRACTS } from "./constants/contracts";
+import { createConfig, AbstractProvider } from "@abstract-money/react";
+import { xionProvider } from "@abstract-money/provider-xion";
+
+const abstractConfig = createConfig({
+  apiUrl: "https://xion.api.abstract.money/graphql",
+  provider: xionProvider,
+});
 
 const config = {
   treasury: TREASURY.treasury,
@@ -13,7 +20,9 @@ const config = {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AbstraxionProvider config={config}>
-      <App />
+      <AbstractProvider config={abstractConfig}>
+        <App />
+      </AbstractProvider>
     </AbstraxionProvider>
   </StrictMode>
 );

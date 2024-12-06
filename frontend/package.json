@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@abstract-money/core": "^3.4.3",
+    "@abstract-money/react": "^2.3.6",
     "lucide-react": "^0.344.0",
     "qrcode.react": "^4.1.0",
     "react": "^18.3.1",
