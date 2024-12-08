@@ -7,6 +7,13 @@ import {
 import { CwCooperationDilemmaClient } from "../../../../codegen/CwCooperationDilemma.client";
 import { CONTRACTS } from "../../../constants/contracts";
 
+export enum GameStatus {
+  PENDING = "pending",
+  CREATED = "created",
+  IN_PROGRESS = "in_progress",
+  ENDED = "ended",
+}
+
 interface Room {
   id: number;
   players: [string, string][];
@@ -178,13 +185,27 @@ export const Rooms = () => {
                   )}
                   <p
                     className={`mt-2 ${
-                      room.status === "pending"
+                      room.status === GameStatus.PENDING
                         ? "text-green-400"
+                        : room.status === GameStatus.CREATED
+                        ? "text-blue-400"
                         : "text-yellow-400"
                     }`}
                   >
                     Status: {room.status}
                   </p>
+
+                  {room.status === GameStatus.CREATED && (
+                    <button
+                      onClick={() => {
+                        // TODO: Add your start game logic here
+                        console.log(`Starting game ${room.id}`);
+                      }}
+                      className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                    >
+                      Start Game
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
