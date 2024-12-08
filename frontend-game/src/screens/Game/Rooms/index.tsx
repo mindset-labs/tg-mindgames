@@ -5,13 +5,15 @@ import {
   useAbstraxionSigningClient,
 } from "@burnt-labs/abstraxion";
 import { CwCooperationDilemmaClient } from "../../../../codegen/CwCooperationDilemma.client";
-import { CONTRACTS } from "../../../constants/contracts";
-
+import { CONTRACTS, TREASURY } from "../../../constants/contracts";
+import WebApp from "@twa-dev/sdk";
+import { useState } from "react";
 export enum GameStatus {
   PENDING = "pending",
   CREATED = "created",
   IN_PROGRESS = "in_progress",
   ENDED = "ended",
+  READY = "ready",
 }
 
 interface Room {
@@ -29,6 +31,18 @@ export const Rooms = () => {
   const { data: account } = useAbstraxionAccount();
   const { client } = useAbstraxionSigningClient();
 
+  const { data: telegramName } = useQuery({
+    queryKey: ["telegramName"],
+    queryFn: async () => {
+      if (!client) {
+        throw new Error("Client not initialized");
+      }
+      const telegramName = await WebApp.initDataUnsafe?.user?.username;
+      return telegramName;
+    },
+    enabled: !!client,
+  });
+
   const contractQueryClient = new CwCooperationDilemmaClient(
     client,
     account?.bech32Address,
@@ -39,6 +53,7 @@ export const Rooms = () => {
     data: rooms = [],
     isLoading,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["games"],
     queryFn: async () => {
@@ -109,6 +124,55 @@ export const Rooms = () => {
     refetchIntervalInBackground: true, // Continue refreshing even when tab is in background
     staleTime: 3000, // Consider data stale after 3 seconds
   });
+  const [isJoiningGame, setIsJoiningGame] = useState(false);
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
+  const joinGame = async (gameId: number) => {
+    try {
+      setIsJoiningGame(true);
+      console.log("Joining game");
+
+      const tx = await client?.execute(
+        account?.bech32Address,
+        CONTRACTS.cwCooperationDilemma,
+        {
+          lifecycle: {
+            join_game: { game_id: gameId, telegram_id: telegramName ?? "" },
+          },
+        },
+        {
+          amount: [{ amount: "1", denom: "uxion" }],
+          gas: "500000",
+          granter: TREASURY.treasury,
+        },
+        "",
+        []
+      );
+      console.log(tx);
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await refetch();
+
+      setNotification({
+        message: "Successfully joined the game! 🎮",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Failed to join game:", error);
+      setNotification({
+        message: `Failed to join game: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        type: "error",
+      });
+    } finally {
+      setIsJoiningGame(false);
+      setTimeout(() => setNotification(null), 5000);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -196,14 +260,41 @@ export const Rooms = () => {
                   </p>
 
                   {room.status === GameStatus.CREATED && (
+                    <>
+                      <button
+                        onClick={() => joinGame(room.id)}
+                        disabled={isJoiningGame}
+                        className={`mt-4 w-full ${
+                          isJoiningGame
+                            ? "bg-gray-500 cursor-not-allowed"
+                            : "bg-green-600 hover:bg-green-700"
+                        } text-white font-bold py-2 px-4 rounded transition-colors`}
+                      >
+                        {isJoiningGame ? "Joining..." : "Join Game"}
+                      </button>
+                      {notification && room.id === room.id && (
+                        <p
+                          className={`mt-2 text-sm ${
+                            notification.type === "success"
+                              ? "text-green-400"
+                              : "text-red-400"
+                          }`}
+                        >
+                          {notification.message}
+                        </p>
+                      )}
+                    </>
+                  )}
+
+                  {(room.status === "ready" ||
+                    room.status === "in_progress") && (
                     <button
-                      onClick={() => {
-                        // TODO: Add your start game logic here
-                        console.log(`Starting game ${room.id}`);
-                      }}
-                      className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                      onClick={() =>
+                        (window.location.href = `/tg-app/game/play/${room.id}`)
+                      }
+                      className="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors"
                     >
-                      Start Game
+                      Play Game
                     </button>
                   )}
                 </div>

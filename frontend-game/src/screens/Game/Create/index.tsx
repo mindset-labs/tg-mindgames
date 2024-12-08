@@ -12,6 +12,7 @@ import { LifecycleClient } from "../../../../codegen/Lifecycle.client";
 import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { ExecuteMsg, GameConfig } from "../../../../codegen/Lifecycle.types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import WebApp from "@twa-dev/sdk";
 
 // You'll need to define this type based on your game data structure
 type Game = {
@@ -44,6 +45,20 @@ export const CreateGame = () => {
   const [arrayOfCommitments, setArrayOfCommitments] = useState<string[]>([]);
   const [selectedGameName, setSelectedGameName] = useState<string | null>(null);
   const [isCreatingGame, setIsCreatingGame] = useState(false);
+  const [isJoiningGame, setIsJoiningGame] = useState(false);
+  const [isStartingGame, setIsStartingGame] = useState(false);
+
+  const { data: telegramName } = useQuery({
+    queryKey: ["telegramName"],
+    queryFn: async () => {
+      if (!client) {
+        throw new Error("Client not initialized");
+      }
+      const telegramName = await WebApp.initDataUnsafe?.user?.username;
+      return telegramName;
+    },
+    enabled: !!client,
+  });
 
   const availableGames: Game[] = [
     {
@@ -135,7 +150,7 @@ export const CreateGame = () => {
 
       const gameConfig: GameConfig = {
         has_turns: true,
-        max_rounds: 10,
+        max_rounds: 2,
         min_deposit: "0",
         min_players: 2,
         skip_reveal: false,
@@ -184,37 +199,67 @@ export const CreateGame = () => {
   };
 
   const startGame = async () => {
-    if (!gameId) {
-      throw new Error("Game ID is not set");
-    }
+    try {
+      setIsStartingGame(true);
+      if (!gameId) {
+        throw new Error("Game ID is not set");
+      }
 
-    const startGameMsg: ExecuteMsg = {
-      start_game: {
-        game_id: gameId,
-      },
-    };
-
-    const tx = await client?.execute(
-      account?.bech32Address,
-      CONTRACTS.cwCooperationDilemma,
-      {
-        lifecycle: {
-          start_game: {
-            game_id: gameId,
+      const tx = await client?.execute(
+        account?.bech32Address,
+        CONTRACTS.cwCooperationDilemma,
+        {
+          lifecycle: {
+            start_game: {
+              game_id: gameId,
+            },
           },
         },
-      },
-      {
-        amount: [{ amount: "1", denom: "uxion" }],
-        gas: "500000",
-        granter: TREASURY.treasury,
-      },
-      "", // memo
-      []
-    );
-    console.log(tx);
-    setIsGameStarted(true);
-    setIsGameInProgress(true);
+        {
+          amount: [{ amount: "1", denom: "uxion" }],
+          gas: "500000",
+          granter: TREASURY.treasury,
+        },
+        "", // memo
+        []
+      );
+      console.log(tx);
+      setIsGameStarted(true);
+      setIsGameInProgress(true);
+    } catch (error) {
+      console.error("Failed to start game:", error);
+    } finally {
+      setIsStartingGame(false);
+    }
+  };
+
+  const joinGame = async () => {
+    try {
+      setIsJoiningGame(true);
+      console.log("Joining game");
+
+      const tx = await client?.execute(
+        account?.bech32Address,
+        CONTRACTS.cwCooperationDilemma,
+        {
+          lifecycle: {
+            join_game: { game_id: gameId, telegram_id: telegramName ?? "" },
+          },
+        },
+        {
+          amount: [{ amount: "1", denom: "uxion" }],
+          gas: "500000",
+          granter: TREASURY.treasury,
+        },
+        "", // memo
+        []
+      );
+      console.log(tx);
+    } catch (error) {
+      console.error("Failed to join game:", error);
+    } finally {
+      setIsJoiningGame(false);
+    }
   };
 
   return (
@@ -269,9 +314,10 @@ export const CreateGame = () => {
 
                 <button
                   onClick={createGame}
-                  className="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition"
+                  disabled={isCreatingGame}
+                  className="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create Game
+                  {isCreatingGame ? "Creating..." : "Create Game"}
                 </button>
               </div>
             ) : (
@@ -289,10 +335,11 @@ export const CreateGame = () => {
 
                   <div className="flex space-x-4 mt-6">
                     <button
-                      onClick={startGame}
-                      className="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition"
+                      onClick={joinGame}
+                      disabled={isJoiningGame}
+                      className="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Start Game
+                      {isJoiningGame ? "Joining..." : "Join Game"}
                     </button>
                     <button
                       onClick={refreshGameData}
@@ -317,6 +364,17 @@ export const CreateGame = () => {
               {gameDetails?.players?.map((player: any) => (
                 <div key={player.telegramId}>{player.telegramId}</div>
               ))}
+
+              {gameDetails?.players?.length === 2 && !isGameStarted && (
+                <button
+                  onClick={startGame}
+                  disabled={isStartingGame}
+                  className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isStartingGame ? "Starting..." : "Start Game"}
+                </button>
+              )}
+
               <button
                 onClick={() => setIsGameInProgress(false)}
                 className="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition"

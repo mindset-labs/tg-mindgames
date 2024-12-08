@@ -7,6 +7,7 @@ import { Rooms } from "../../screens/Game/Rooms";
 import { Settings } from "../../screens/Settings";
 import { Test } from "../../screens/Test";
 import { CreateWallet } from "../../screens/Wallet/Create";
+import Play from "../../screens/Game/Play";
 
 const router = createBrowserRouter([
   {
@@ -41,6 +42,10 @@ const router = createBrowserRouter([
   {
     path: "/tg-app/test",
     element: <Test />,
+  },
+  {
+    path: "/tg-app/game/play/:gameId",
+    element: <Play />,
   },
 ]);
 
