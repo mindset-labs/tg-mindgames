@@ -8,10 +8,7 @@ import { createConfig, AbstractProvider } from "@abstract-money/react";
 import { xionProvider } from "@abstract-money/provider-xion";
 import { store } from "./app/store";
 import { Provider } from "react-redux";
-import {
-  QueryClient,
-  QueryClientProvider,
-} from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const abstractConfig = createConfig({
   apiUrl: "https://xion.api.abstract.money/graphql",
@@ -20,11 +17,10 @@ const abstractConfig = createConfig({
 
 const config = {
   treasury: TREASURY.treasury,
-  contracts: [CONTRACTS.counterContract],
+  contracts: [CONTRACTS.counterContract, CONTRACTS.cwCooperationDilemma],
 };
 
-const queryClient = new QueryClient()
-
+const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

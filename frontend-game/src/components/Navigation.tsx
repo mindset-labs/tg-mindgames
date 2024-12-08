@@ -11,7 +11,7 @@ export default function Navigation() {
       id: "home",
       icon: HomeIcon,
       label: "Home",
-      path: "/tg-app/game/home",
+      path: "/tg-app/game/",
     },
     {
       id: "games",
