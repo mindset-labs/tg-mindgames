@@ -1,12 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navigation from "../../../components/Navigation";
 import dilemma from "../../../assets/dilemma.jpg";
 import spaceship from "../../../assets/spaceship.jpeg";
-import { useAbstraxionSigningClient } from "@burnt-labs/abstraxion";
+import {
+  useAbstraxionAccount,
+  useAbstraxionSigningClient,
+} from "@burnt-labs/abstraxion";
 import { CwCooperationDilemmaClient } from "../../../../codegen/CwCooperationDilemma.client";
+import { CONTRACTS, TREASURY } from "../../../constants/contracts";
 import { LifecycleClient } from "../../../../codegen/Lifecycle.client";
 import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { ExecuteMsg, GameConfig } from "../../../../codegen/Lifecycle.types";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // You'll need to define this type based on your game data structure
 type Game = {
@@ -25,16 +30,21 @@ type Player = {
 };
 
 export const CreateGame = () => {
-  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const { data: account } = useAbstraxionAccount();
   const { client } = useAbstraxionSigningClient();
+  const queryClient = useQueryClient();
+
+  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [isGameCreated, setIsGameCreated] = useState(false);
   const [isGameInProgress, setIsGameInProgress] = useState(false);
   const [gameId, setGameId] = useState<number | null>(null);
+  const [isGameStarted, setIsGameStarted] = useState(false);
   const [currentRound, setCurrentRound] = useState<number | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [arrayOfCommitments, setArrayOfCommitments] = useState<string[]>([]);
+  const [selectedGameName, setSelectedGameName] = useState<string | null>(null);
+  const [isCreatingGame, setIsCreatingGame] = useState(false);
 
-  // Mock data - replace with actual API call
   const availableGames: Game[] = [
     {
       id: "1",
@@ -59,94 +69,153 @@ export const CreateGame = () => {
 
   const executeClient = new LifecycleClient(
     client as SigningCosmWasmClient,
-    "xion1p6z52rfzkehhjm64cdd6396swzhqqj787u205kux06vr4uyp8lxqe5v8gr",
+    account?.bech32Address,
     "xion17ep30wmgw7xqefagdlx7kz3t746q9rj5xy37tf7g9v68d9d7ncaskl3qrz"
   );
 
-  const queryClient = new CwCooperationDilemmaClient(
+  const contractQueryClient = new CwCooperationDilemmaClient(
     client as SigningCosmWasmClient,
-    "xion1p6z52rfzkehhjm64cdd6396swzhqqj787u205kux06vr4uyp8lxqe5v8gr",
+    account?.bech32Address,
     "xion12cfz7k5a6hj744jdsj52r57dth4tlnggcfqdyw6620rja0f6ltdsl8c2rh"
   );
 
-  const getCurrentRound = async () => {
-    const currentRound = await queryClient.getCurrentRound({ gameId: 1 });
-    console.log(currentRound);
+  const { data: roundData } = useQuery({
+    queryKey: ["currentRound", gameId],
+    queryFn: async () => {
+      if (!gameId) return null;
+      const round = await contractQueryClient.getCurrentRound({
+        gameId: gameId as number,
+      });
+      return round;
+    },
+    enabled: !!gameId && !!client,
+    refetchInterval: 5000, // Refetch every 5 seconds
+  });
+
+  const { data: gameStatus } = useQuery({
+    queryKey: ["gameStatus", gameId],
+    queryFn: async () => {
+      if (!gameId) return null;
+      const status = await contractQueryClient.getGameStatus({
+        gameId: gameId as number,
+      });
+      return status;
+    },
+    enabled: !!gameId && !!client,
+    refetchInterval: 5000,
+  });
+
+  const { data: gameDetails } = useQuery({
+    queryKey: ["gameDetails", gameId],
+    queryFn: async () => {
+      if (!gameId) return null;
+      const details = await contractQueryClient.getGame({
+        gameId: gameId as number,
+      });
+      return details;
+    },
+    enabled: !!gameId && !!client,
+    refetchInterval: 5000,
+  });
+
+  // Function to manually refresh all queries
+  const refreshGameData = () => {
+    queryClient.invalidateQueries({ queryKey: ["currentRound", gameId] });
+    queryClient.invalidateQueries({ queryKey: ["gameStatus", gameId] });
+    queryClient.invalidateQueries({ queryKey: ["gameDetails", gameId] });
   };
 
   const createGame = async () => {
-    const randomGameId = Math.floor(Math.random() * 1000000);
-    const gameConfig: GameConfig = {
-      has_turns: true,
-      max_rounds: 10,
-      min_deposit: "0",
-      min_players: 2,
-      skip_reveal: false,
-    };
+    try {
+      setIsCreatingGame(true);
+      if (!client) {
+        console.error("Wallet not connected");
+        return;
+      }
 
-    const tx = await executeClient
-      .createGame({ config: gameConfig })
-      .then((res) => {
-        console.log(res);
-        const gameId = res.events
-          .find((e) => e.type === "wasm")
-          ?.attributes.find((a) => a.key === "game_id")?.value;
-        if (gameId) {
-          setGameId(parseInt(gameId));
-          console.log("Game ID:", gameId);
-        }
-      });
+      const gameConfig: GameConfig = {
+        has_turns: true,
+        max_rounds: 10,
+        min_deposit: "0",
+        min_players: 2,
+        skip_reveal: false,
+      };
 
-    // const createGameMsg: ExecuteMsg = {
-    //   create_game: {
-    //     config: gameConfig,
-    //   },
-    // };
+      console.log("My address", account?.bech32Address);
+
+      await client
+        ?.execute(
+          account?.bech32Address,
+          CONTRACTS.cwCooperationDilemma,
+          {
+            lifecycle: {
+              create_game: { config: gameConfig },
+            },
+          },
+          {
+            amount: [{ amount: "1", denom: "uxion" }],
+            gas: "500000",
+            granter: TREASURY.treasury,
+          },
+          "", // memo
+          []
+        )
+        .then((res) => {
+          console.log("Transaction response:", res);
+          const gameId = res.events
+            .find((e) => e.type === "wasm")
+            ?.attributes.find((a) => a.key === "game_id")?.value;
+          if (gameId) {
+            setGameId(parseInt(gameId));
+            console.log("Game ID:", gameId);
+            setIsGameCreated(true);
+          }
+        })
+        .catch((error) => {
+          console.error("Transaction failed:", error);
+        })
+        .finally(() => {
+          setIsCreatingGame(false);
+        });
+    } catch (error) {
+      console.error("Create game failed:", error);
+      setIsCreatingGame(false);
+    }
   };
 
-  //TODO: move to rooms screen
-  // const joinGame = async () => {
-  //   const joinGameMsg: ExecuteMsg = {
-  //     join_game: {
-  //       game_id: randomGameId,
-  //     },
-  //   };
-  // };
-
   const startGame = async () => {
-    const randomGameId = Math.floor(Math.random() * 1000000);
+    if (!gameId) {
+      throw new Error("Game ID is not set");
+    }
 
     const startGameMsg: ExecuteMsg = {
       start_game: {
-        game_id: randomGameId,
+        game_id: gameId,
       },
     };
 
     const tx = await client?.execute(
-      "xion1p6z52rfzkehhjm64cdd6396swzhqqj787u205kux06vr4uyp8lxqe5v8gr",
-      "xion17ep30wmgw7xqefagdlx7kz3t746q9rj5xy37tf7g9v68d9d7ncaskl3qrz",
-      startGameMsg,
-      "auto"
+      account?.bech32Address,
+      CONTRACTS.cwCooperationDilemma,
+      {
+        lifecycle: {
+          start_game: {
+            game_id: gameId,
+          },
+        },
+      },
+      {
+        amount: [{ amount: "1", denom: "uxion" }],
+        gas: "500000",
+        granter: TREASURY.treasury,
+      },
+      "", // memo
+      []
     );
     console.log(tx);
-    setIsGameCreated(true);
-    setGameId(randomGameId);
-    getCurrentRound();
+    setIsGameStarted(true);
     setIsGameInProgress(true);
   };
-
-  // const startGame = async () => {
-  //   const randomGameId = Math.floor(Math.random() * 1000000);
-  //   const tx = await executeClient
-  //     .startGame({ gameId: randomGameId })
-  //     .then((res) => {
-  //       console.log(res);
-  //       setIsGameCreated(true);
-  //       setGameId(randomGameId);
-  //       getCurrentRound();
-  //       setIsGameInProgress(true);
-  //     });
-  // };
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-gradient-to-b from-[#160f28] to-black">
@@ -176,7 +245,7 @@ export const CreateGame = () => {
                   </div>
                 ))}
               </div>
-            ) : (
+            ) : !isGameCreated ? (
               <div className="bg-white/10 rounded-lg p-8 max-w-2xl mx-auto max-h-[calc(100vh-12rem)] overflow-y-auto">
                 <button
                   onClick={() => setSelectedGame(null)}
@@ -205,20 +274,53 @@ export const CreateGame = () => {
                   Create Game
                 </button>
               </div>
+            ) : (
+              <div className="bg-white/10 rounded-lg p-8 max-w-2xl mx-auto">
+                <h2 className="text-2xl font-bold text-white mb-4">
+                  Game Created!
+                </h2>
+                <div className="text-gray-300 space-y-4">
+                  <p>Game ID: {gameId}</p>
+                  <p>Status: {gameStatus?.status || "Pending"}</p>
+                  <p>Players: {gameDetails?.players?.length || 0}</p>
+                  <p>
+                    Current Round: {roundData?.current_round || "Not started"}
+                  </p>
+
+                  <div className="flex space-x-4 mt-6">
+                    <button
+                      onClick={startGame}
+                      className="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition"
+                    >
+                      Start Game
+                    </button>
+                    <button
+                      onClick={refreshGameData}
+                      className="bg-gray-600 text-white px-8 py-3 rounded-lg hover:bg-gray-700 transition"
+                    >
+                      Refresh Data
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         ) : (
-          <div>
-            Game {gameId} in progress
-            <div>Current round: {currentRound}</div>
-            <div>
-              Players: {players.length}
-              {players.map((player) => (
+          <div className="bg-white/10 rounded-lg p-8 max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold text-white mb-4">
+              Game {gameId} in progress
+            </h2>
+            <div className="text-gray-300 space-y-4">
+              <p>Current round: {roundData?.current_round}</p>
+              <p>Status: {gameStatus?.status}</p>
+              <p>Players: {gameDetails?.players?.length || 0}</p>
+              {gameDetails?.players?.map((player: any) => (
                 <div key={player.telegramId}>{player.telegramId}</div>
               ))}
-            </div>
-            <div>
-              <button onClick={() => setIsGameInProgress(false)}>
+              <button
+                onClick={() => setIsGameInProgress(false)}
+                className="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition"
+              >
                 End Game
               </button>
             </div>

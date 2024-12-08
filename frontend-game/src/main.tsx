@@ -17,7 +17,11 @@ const abstractConfig = createConfig({
 
 const config = {
   treasury: TREASURY.treasury,
-  contracts: [CONTRACTS.counterContract, CONTRACTS.cwCooperationDilemma],
+  contracts: [
+    CONTRACTS.counterContract,
+    CONTRACTS.cwCooperationDilemma,
+    CONTRACTS.cwLifeCycle,
+  ],
 };
 
 const queryClient = new QueryClient();

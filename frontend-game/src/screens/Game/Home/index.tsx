@@ -3,8 +3,10 @@ import { CwCooperationDilemmaClient } from "../../../../codegen/CwCooperationDil
 import { useQuery } from "@tanstack/react-query";
 import { useAbstraxionSigningClient } from "@burnt-labs/abstraxion";
 import WebApp from "@twa-dev/sdk";
+import { useNavigate } from "react-router-dom";
 
 export const GameHome = () => {
+  const navigate = useNavigate();
   const { client } = useAbstraxionSigningClient();
 
   const { data: gamesCount } = useQuery({
@@ -65,7 +67,7 @@ export const GameHome = () => {
                 Recent Activity
               </h2>
               <div className="space-y-4">
-                {[1, 2, 3].map((_, index) => (
+                {[1, 2].map((_, index) => (
                   <div
                     key={index}
                     className="border-b border-gray-700 pb-3 last:border-0"
@@ -79,18 +81,13 @@ export const GameHome = () => {
 
             {/* Available Games Card */}
             <div className="bg-[#1f1635] rounded-lg p-6 shadow-lg">
-              <h2 className="text-2xl font-semibold text-white mb-4">
-                Available Games
-              </h2>
+              <h2 className="text-2xl font-semibold text-white mb-4">Tests</h2>
               <div className="space-y-4">
-                <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-colors">
-                  Quick Match
-                </button>
-                <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-colors">
-                  Ranked Game
-                </button>
-                <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-colors">
-                  Practice Mode
+                <button
+                  onClick={() => navigate("/tg-app/test")}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-colors"
+                >
+                  Cw_counter
                 </button>
               </div>
             </div>
