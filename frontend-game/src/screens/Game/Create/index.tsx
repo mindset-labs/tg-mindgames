@@ -13,6 +13,7 @@ import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { ExecuteMsg, GameConfig } from "../../../../codegen/Lifecycle.types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import WebApp from "@twa-dev/sdk";
+import { useNavigate } from "react-router-dom";
 
 // You'll need to define this type based on your game data structure
 type Game = {
@@ -34,6 +35,7 @@ export const CreateGame = () => {
   const { data: account } = useAbstraxionAccount();
   const { client } = useAbstraxionSigningClient();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [isGameCreated, setIsGameCreated] = useState(false);
@@ -91,7 +93,7 @@ export const CreateGame = () => {
   const contractQueryClient = new CwCooperationDilemmaClient(
     client as SigningCosmWasmClient,
     account?.bech32Address,
-    "xion12cfz7k5a6hj744jdsj52r57dth4tlnggcfqdyw6620rja0f6ltdsl8c2rh"
+    "xion1lp7xue46k9909xycngp5ms459hsldc5cqqquqw0an0g4qnsahm4snyczyx"
   );
 
   const { data: roundData } = useQuery({
@@ -347,6 +349,16 @@ export const CreateGame = () => {
                     >
                       Refresh Data
                     </button>
+                    {gameDetails?.players?.some(
+                      ([address]) => address === account?.bech32Address
+                    ) && (
+                      <button
+                        onClick={() => navigate(`/tg-app/game/play/${gameId}`)}
+                        className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition"
+                      >
+                        Play Game
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

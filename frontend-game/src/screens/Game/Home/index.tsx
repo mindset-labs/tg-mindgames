@@ -18,7 +18,7 @@ export const GameHome = () => {
       const queryClient = new CwCooperationDilemmaClient(
         client,
         "xion1p6z52rfzkehhjm64cdd6396swzhqqj787u205kux06vr4uyp8lxqe5v8gr",
-        "xion12cfz7k5a6hj744jdsj52r57dth4tlnggcfqdyw6620rja0f6ltdsl8c2rh"
+        "xion1lp7xue46k9909xycngp5ms459hsldc5cqqquqw0an0g4qnsahm4snyczyx"
       );
       return queryClient.getGamesCount();
     },

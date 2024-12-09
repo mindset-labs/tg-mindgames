@@ -110,7 +110,7 @@ const Play = () => {
   });
 
   const generateNonce = () => {
-    return Math.random().toString(36).substring(2, 15);
+    return Math.floor(Math.random() * 1000000);
   };
 
   const handleChoice = async (choice: "cooperate" | "defect") => {
@@ -121,17 +121,25 @@ const Play = () => {
 
       // Generate and save nonce
       const newNonce = generateNonce();
-      setNonce(newNonce);
+      setNonce(newNonce.toString());
 
       // Save original choice for reveal later
       setCommittedValue(choice);
 
-      // Create the hash
-      const valueWithNonce = `${choice}${newNonce}`;
+      // Create the hash using the same method
       const encoder = new TextEncoder();
-      const data = encoder.encode(valueWithNonce);
-      const hashArray = await sha256(data);
-      const hashedValue = Buffer.from(hashArray).toString("hex");
+      const choiceBytes = encoder.encode(choice);
+      const nonceBytes = new Uint8Array(
+        new BigUint64Array([BigInt(newNonce)]).buffer
+      ).reverse();
+
+      const hashValue = await crypto.subtle.digest(
+        "SHA-256",
+        new Uint8Array([...choiceBytes, ...nonceBytes])
+      );
+      const hashedValue = Array.from(new Uint8Array(hashValue))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
 
       await client.execute(
         account.bech32Address,
@@ -204,7 +212,7 @@ const Play = () => {
             reveal_round: {
               game_id: Number(gameId),
               value: committedValue,
-              nonce: nonce,
+              nonce: parseInt(nonce),
             },
           },
         },
@@ -218,6 +226,7 @@ const Play = () => {
       );
     } catch (error) {
       console.error("Error revealing round:", error);
+      console.log({ committedValue, nonce });
     } finally {
       setIsRevealing(false);
     }
@@ -304,6 +313,30 @@ const Play = () => {
                 <div key={index} className="bg-[#2a1f45] p-4 rounded-lg mb-2">
                   <p className="text-gray-300">Round ID: {round.id}</p>
                   <p className="text-gray-300">Status: {round.status}</p>
+
+                  {/* Show choice buttons if game is in progress/ready and player hasn't committed */}
+                  {(gameStatus === "in_progress" || gameStatus === "ready") &&
+                    !round.commits.some(
+                      ([address]) => address === account?.bech32Address
+                    ) && (
+                      <div className="mt-4 flex justify-center gap-4">
+                        <button
+                          className="px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => handleChoice("cooperate")}
+                          disabled={isSubmittingChoice}
+                        >
+                          {isSubmittingChoice ? "Submitting..." : "Cooperate"}
+                        </button>
+                        <button
+                          className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => handleChoice("defect")}
+                          disabled={isSubmittingChoice}
+                        >
+                          {isSubmittingChoice ? "Submitting..." : "Defect"}
+                        </button>
+                      </div>
+                    )}
+
                   {round.commits.length > 0 && (
                     <div className="mt-2">
                       <p className="text-gray-400">Commits:</p>
@@ -315,8 +348,11 @@ const Play = () => {
                           <p>Choice: {choice}</p>
                         </div>
                       ))}
+                      {/* Show reveal button if both players committed but current player hasn't revealed */}
                       {round.commits.length === 2 &&
-                        round.reveals.length === 0 && (
+                        !round.reveals.some(
+                          ([address]) => address === account?.bech32Address
+                        ) && (
                           <button
                             className="mt-2 px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={handleReveal}
@@ -327,6 +363,7 @@ const Play = () => {
                         )}
                     </div>
                   )}
+
                   {round.reveals.length > 0 && (
                     <div className="mt-2">
                       <p className="text-gray-400">Reveals:</p>
@@ -345,10 +382,15 @@ const Play = () => {
 
         <div className="bg-[#1f1635] rounded-lg p-6 shadow-lg">
           <h2 className="text-2xl font-semibold text-white mb-6">
-            {currentRound === 0 ? "Start Game" : "Make Your Choice"}
+            {currentRound === 1
+              ? "Start Game"
+              : currentRound <= gameDetails.config.max_rounds &&
+                gameStatus === "in_progress"
+              ? `Round ${currentRound}: Make Your Choice`
+              : "Game Complete"}
           </h2>
           <div className="flex justify-center gap-4">
-            {currentRound === 0 ? (
+            {gameStatus === "pending" || gameStatus === "ready" ? (
               <button
                 className="px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={startGame}
@@ -356,8 +398,62 @@ const Play = () => {
               >
                 {isStartingGame ? "Starting..." : "Start Game"}
               </button>
+            ) : currentRound <= gameDetails.config.max_rounds &&
+              gameStatus === "in_progress" ? (
+              <div className="space-y-4 w-full">
+                {/* Show commit buttons if player hasn't committed yet */}
+                {!gameDetails.rounds[currentRound - 1]?.commits.some(
+                  ([address]) => address === account?.bech32Address
+                ) && (
+                  <div className="flex justify-center gap-4">
+                    <button
+                      className="px-6 py-3 text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => handleChoice("cooperate")}
+                      disabled={isSubmittingChoice}
+                    >
+                      {isSubmittingChoice ? "Submitting..." : "Cooperate"}
+                    </button>
+                    <button
+                      className="px-6 py-3 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => handleChoice("defect")}
+                      disabled={isSubmittingChoice}
+                    >
+                      {isSubmittingChoice ? "Submitting..." : "Defect"}
+                    </button>
+                  </div>
+                )}
+
+                {/* Show reveal buttons if player has committed */}
+                {gameDetails.rounds[currentRound - 1]?.commits.some(
+                  ([address]) => address === account?.bech32Address
+                ) && (
+                  <div className="flex justify-center gap-4">
+                    <button
+                      className="px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={handleReveal}
+                      disabled={isRevealing}
+                    >
+                      {isRevealing ? "Revealing..." : "Reveal Round"}
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
-              <>
+              <p className="text-white">Waiting for other player...</p>
+            )}
+          </div>
+        </div>
+
+        {/* Add controls for next round when current round has ended */}
+        {gameStatus === "in_progress" &&
+          currentRound > 0 &&
+          currentRound <= gameDetails.config.max_rounds &&
+          gameDetails.rounds[currentRound - 1]?.status === "ended" && (
+            <div className="bg-[#1f1635] rounded-lg p-6 shadow-lg mt-6">
+              <h2 className="text-2xl font-semibold text-white mb-6">
+                Round {currentRound}: Make Your Choice
+              </h2>
+              <div className="flex justify-center gap-4">
                 <button
                   className="px-6 py-3 text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={() => handleChoice("cooperate")}
@@ -372,10 +468,9 @@ const Play = () => {
                 >
                   {isSubmittingChoice ? "Submitting..." : "Defect"}
                 </button>
-              </>
-            )}
-          </div>
-        </div>
+              </div>
+            </div>
+          )}
       </main>
       <Navigation />
     </div>
