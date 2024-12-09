@@ -9,6 +9,7 @@ import {
 import { CwCooperationDilemmaClient } from "../../../../codegen/CwCooperationDilemma.client";
 import { CONTRACTS, TREASURY } from "../../../constants/contracts";
 import { sha256 } from "@cosmjs/crypto";
+import VersusAnimation from "../../../components/VersusAnimation";
 
 const Play = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const Play = () => {
   const [isRevealing, setIsRevealing] = useState(false);
   const [committedValue, setCommittedValue] = useState<string>("");
   const [nonce, setNonce] = useState<string>("");
+  const [showVersusAnimation, setShowVersusAnimation] = useState(false);
 
   // Create the contract client only if we have a client
   const contractQueryClient = client
@@ -172,9 +174,8 @@ const Play = () => {
 
     try {
       setIsStartingGame(true);
-
       await client.execute(
-        account.bech32Address,
+        account?.bech32Address,
         CONTRACTS.cwCooperationDilemma,
         {
           lifecycle: {
@@ -191,6 +192,7 @@ const Play = () => {
         "",
         []
       );
+      setShowVersusAnimation(true);
     } catch (error) {
       console.error("Error starting game:", error);
     } finally {
@@ -265,6 +267,19 @@ const Play = () => {
         </div>
         <Navigation />
       </div>
+    );
+  }
+
+  if (showVersusAnimation && gameDetails?.players) {
+    const [player1Address, player1Telegram] = gameDetails.players[0] || [];
+    const [player2Address, player2Telegram] = gameDetails.players[1] || [];
+
+    return (
+      <VersusAnimation
+        player1={player1Telegram || player1Address.slice(0, 8)}
+        player2={player2Telegram || player2Address.slice(0, 8)}
+        onComplete={() => setShowVersusAnimation(false)}
+      />
     );
   }
 
