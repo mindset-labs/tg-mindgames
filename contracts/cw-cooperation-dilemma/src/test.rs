@@ -471,4 +471,120 @@ mod tests {
         }).unwrap();
         assert_eq!(balance.balance, Uint128::new(50));
     }
+
+    #[test]
+    fn dilemma_contract_multi_round_game_flow() {
+        let mut app = mock_app();
+        let p1 = app.api().addr_make(&"player_1".to_string());
+        let p2 = app.api().addr_make(&"player_2".to_string());
+        let (p2e_contract, cooperation_game_contract) = setup_contracts(&mut app, None);
+
+        // create the game
+        let mut config = cw_game_lifecycle::state::GameConfig::default();
+        config.max_players = Some(2);
+        config.max_rounds = 3;
+        let msg =
+            crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::CreateGame {
+                config,
+            });
+
+        // player 1 creates the game
+        app
+            .execute_contract(p1.clone(), cooperation_game_contract.addr(), &msg, &[])
+            .unwrap();
+        // 2 players join the game
+        join_game(&mut app, &cooperation_game_contract, &p2e_contract, vec![p1.clone(), p2.clone()]);
+        
+        // player 1 can start the game
+        let msg = crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::StartGame {
+            game_id: 0,
+        });
+        app.execute_contract(p1.clone(), cooperation_game_contract.addr(), &msg, &[]).unwrap();
+
+        // prepare value to commit, both players will commit the same value for test simplicity
+        let nonce = rand::random::<u64>();
+        let mut hasher = Sha256::new();
+        hasher.update("cooperate".as_bytes());
+        hasher.update(nonce.to_be_bytes());
+        let hash = hex::encode(hasher.finalize());
+
+        // 
+        // 
+        // 3 ROUNDS
+        // 
+        // 
+
+        for current_round in 1..4 {
+            // player 1 commits to the round
+            let msg = crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::CommitRound {
+                game_id: 0,
+                value: hash.clone(),
+                amount: Some(Uint128::new(100)),
+            });
+            app.execute_contract(p1.clone(), cooperation_game_contract.addr(), &msg, &[]).unwrap();
+
+            // player 2 commits to the round
+            let msg = crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::CommitRound {
+                game_id: 0,
+                value: hash.clone(),
+                amount: Some(Uint128::new(100)),
+            });
+            app.execute_contract(p2.clone(), cooperation_game_contract.addr(), &msg, &[]).unwrap();
+
+            // player 1 reveals the round
+            let msg = crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::RevealRound {
+                game_id: 0,
+                value: "cooperate".to_string(),
+                nonce,
+            });
+            app.execute_contract(p1.clone(), cooperation_game_contract.addr(), &msg, &[]).unwrap();
+
+            // player 2 reveals the round
+            let msg = crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::RevealRound {
+                game_id: 0,
+                value: "cooperate".to_string(),
+                nonce,
+            });
+            app.execute_contract(p2.clone(), cooperation_game_contract.addr(), &msg, &[]).unwrap();
+
+            // check game status, should not be finished yet
+            let game_details: cw_game_lifecycle::state::Game = app
+                .wrap()
+                .query_wasm_smart(cooperation_game_contract.addr(), &crate::msg::QueryMsg::GetGame { game_id: 0 })
+                .unwrap();
+            
+            // assert that the round is incremented
+            assert_eq!(game_details.current_round, current_round + 1);
+            
+            if current_round < 3 {
+                // if this is not the last round, the game should be in progress
+                assert_eq!(game_details.status, cw_game_lifecycle::state::GameStatus::InProgress);
+            } else {
+                // if this is the last round, the game should be finished
+                assert_eq!(game_details.status, cw_game_lifecycle::state::GameStatus::RoundsFinished);
+            }
+        }
+
+        // 
+        // 
+        // END GAME
+        // 
+        // 
+        
+        // player 1 can end the game
+        let msg = crate::msg::ExecuteMsg::Lifecycle(cw_game_lifecycle::msg::ExecuteMsg::EndGame {
+            game_id: 0,
+        });
+        app.execute_contract(p1.clone(), cooperation_game_contract.addr(), &msg, &[]).unwrap();
+
+        // check if the game rewards are distributed by querying the p2e contract
+        let balance: cw20::BalanceResponse = app.wrap().query_wasm_smart(p2e_contract.addr(), &cw_p2e::msg::QueryMsg::Balance {
+            address: p1.to_string(),
+        }).unwrap();
+        assert_eq!(balance.balance, Uint128::new(150));
+        let balance: cw20::BalanceResponse = app.wrap().query_wasm_smart(p2e_contract.addr(), &cw_p2e::msg::QueryMsg::Balance {
+            address: p2.to_string(),
+        }).unwrap();
+        assert_eq!(balance.balance, Uint128::new(150));
+    }
 }

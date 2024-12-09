@@ -328,7 +328,7 @@ pub trait GameLifecycle {
         }
 
         // if all rounds are finished, set the game status to RoundsFinished
-        if game.current_round >= game.config.max_rounds {
+        if game.current_round > game.config.max_rounds {
             game.status = GameStatus::RoundsFinished;
             events.push(
                 Event::new("game_rounds_finished").add_attribute("game_id", game_id.to_string()),
