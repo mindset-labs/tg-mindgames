@@ -5,6 +5,7 @@ import {
 import Navigation from "../../components/Navigation";
 import { useState, useEffect } from "react";
 import { TREASURY, CONTRACTS } from "../../constants/contracts";
+import MindGameLogo from "../../assets/mind-games-logo.png";
 
 export const Test = () => {
   //Counter contract address
@@ -85,34 +86,48 @@ export const Test = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-gradient-to-b from-[#160f28] to-black">
-      <div className="flex-1 px-4 py-8 max-w-7xl mx-auto w-full">
-        <h1 className="text-4xl font-bold text-white mb-8">Settings</h1>
+    <div className="pb-24 flex flex-col h-screen w-full bg-gradient-to-br from-[#160f28] via-[#1a1339] to-black animate-gradient">
+      <main className="flex-1 container mx-auto px-4 py-8 mt-3 overflow-y-auto h-[calc(100vh-64px)] max-w-7xl">
+        <div className="flex items-center justify-center gap-4 mb-8 whitespace-nowrap">
+          <img
+            src={MindGameLogo}
+            alt="Mind Game"
+            className="w-12 h-12 rounded-md"
+          />
+          <h1 className="text-4xl font-bold text-white inline-flex items-center">
+            Counter Testing
+          </h1>
+        </div>
 
-        <div className="bg-[#1F1830] rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold text-white mb-4">
+        <div className="bg-[#1f1635]/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-purple-500/10 hover:border-purple-500/20 transition-all max-w-2xl mx-auto">
+          <h2 className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-6">
             Counter Management
           </h2>
 
-          <div className="mb-4 text-white">
-            Current Count: {counterValue !== null ? counterValue : "Loading..."}
+          <div className="mb-6 p-4 bg-[#160f28]/50 rounded-lg">
+            <span className="text-gray-300">Current Count:</span>
+            <span className="text-white font-bold ml-2">
+              {counterValue !== null ? counterValue : "Loading..."}
+            </span>
           </div>
 
           <button
             onClick={incrementCounter}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 
+                     text-white py-3 px-6 rounded-lg transition-all shadow-lg hover:shadow-purple-500/20
+                     border border-purple-400/30 font-medium"
           >
             Increment Counter
           </button>
 
           {error && (
-            <div className="mt-4 p-4 bg-red-600 text-white rounded-lg">
+            <div className="mt-4 p-4 bg-red-500/20 border border-red-500/50 text-red-200 rounded-lg">
               {error}
             </div>
           )}
 
           {incrementResult && (
-            <div className="mt-4 p-4 bg-[#2A223F] rounded-lg overflow-x-auto">
+            <div className="mt-4 p-4 bg-[#160f28]/50 rounded-lg overflow-x-auto border border-purple-500/10">
               <pre className="text-gray-300 text-sm">
                 {JSON.stringify(
                   incrementResult,
@@ -124,7 +139,7 @@ export const Test = () => {
             </div>
           )}
         </div>
-      </div>
+      </main>
       <Navigation />
     </div>
   );
