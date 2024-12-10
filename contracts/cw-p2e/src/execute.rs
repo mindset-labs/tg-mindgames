@@ -62,6 +62,7 @@ pub fn execute_unlock(_deps: DepsMut, _env: Env, _info: MessageInfo) -> Result<R
 
 pub fn execute_authorize_rewards_issuer(deps: DepsMut, _env: Env, _info: MessageInfo, address: String) -> Result<Response, ContractError> {
     let addr = deps.api.addr_validate(&address)?;
+    // TODO: Check if the sender is an admin
     AUTHORIZED_REWARDS_ISSUERS.save(deps.storage, &addr, &true)?;
     Ok(Response::new().add_attributes(vec![
         attr("action", "authorize_rewards_issuer"),
