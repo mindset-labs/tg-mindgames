@@ -42,6 +42,14 @@ export const Settings = () => {
       console.error("Logout error:", error);
     }
   };
+  const copyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(account.bech32Address);
+      // You could add a toast notification here if you want
+    } catch (error) {
+      console.error("Failed to copy address:", error);
+    }
+  };
 
   return (
     <>
@@ -65,9 +73,18 @@ export const Settings = () => {
                 {account.bech32Address ? (
                   <>
                     <div className="bg-[#160f28]/50 rounded-lg p-4 mb-6">
-                      <p className="text-gray-300 mb-2">Wallet Address:</p>
-                      <div className="font-mono text-sm text-white break-all">
-                        {account.bech32Address}
+                      {/* <p className="text-gray-300 mb-2">Wallet Address:</p> */}
+                      <div className="flex items-center gap-2">
+                        <div className="font-mono text-sm text-white break-all">
+                          {account.bech32Address}
+                        </div>
+                        <button
+                          onClick={copyAddress}
+                          className="shrink-0 p-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 
+                                   text-purple-400 transition-all"
+                        >
+                          Copy
+                        </button>
                       </div>
                     </div>
                     <button

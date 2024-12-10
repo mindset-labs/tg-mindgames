@@ -8,15 +8,15 @@ import {
 import WebApp from "@twa-dev/sdk";
 import { useNavigate } from "react-router-dom";
 import { queryAllChainBalances } from "../../../helpers/Wallet/queryBalances";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import XionLogo from "../../../assets/xion-logo.png";
 import MindGameLogo from "../../../assets/mind-games-logo.png";
 
 export const GameHome = () => {
   const navigate = useNavigate();
   const { client } = useAbstraxionSigningClient();
-  const { bech32Address } = useAbstraxionAccount();
-  const [balances, setBalances] = useState<any[]>([]);
+  const { data: account } = useAbstraxionAccount();
+  const [balances, setBalances] = useState<{ [chain: string]: number }>({});
 
   const { data: gamesCount } = useQuery({
     queryKey: ["gamesCount"],
@@ -49,8 +49,39 @@ export const GameHome = () => {
   });
 
   console.log(telegramName);
+  const { data: balancesData } = useQuery({
+    queryKey: ["balances", account.bech32Address],
+    queryFn: async () => {
+      if (!client) {
+        throw new Error("Client not initialized");
+      }
+      const xionBalance = await client?.getBalance(
+        account.bech32Address,
+        "uxion"
+      );
+      //TODO: get minds balance from contract
+      const mindsBalance = await client?.queryContractSmart(
+        "xion17ep30wmgw7xqefagdlx7kz3t746q9rj5xy37tf7g9v68d9d7ncaskl3qrz",
+        {
+          balance: {
+            address: account.bech32Address,
+          },
+        }
+      );
+      console.log({ mindsBalance });
+      return {
+        xion: Number(xionBalance?.amount ?? 0) / 10 ** 6,
+        minds: Number(mindsBalance?.balance ?? 0) / 10 ** 2,
+      };
+    },
+    enabled: !!account.bech32Address,
+  });
 
-  const fetchBalances = async () => {};
+  useEffect(() => {
+    if (balancesData) {
+      setBalances(balancesData);
+    }
+  }, [balancesData]);
 
   return (
     <>
@@ -101,7 +132,7 @@ export const GameHome = () => {
                     </div>
                     <span className="text-white font-medium">XION</span>
                   </div>
-                  <span className="text-white font-bold">0.00</span>
+                  <span className="text-white font-bold">{balances.xion}</span>
                 </div>
 
                 <div className="bg-[#160f28]/50 rounded-lg p-4 flex justify-between items-center">
@@ -115,7 +146,7 @@ export const GameHome = () => {
                     </div>
                     <span className="text-white font-medium">$MINDS</span>
                   </div>
-                  <span className="text-white font-bold">0.00</span>
+                  <span className="text-white font-bold">{balances.minds}</span>
                 </div>
               </div>
             </div>
