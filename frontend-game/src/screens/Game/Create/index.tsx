@@ -23,6 +23,7 @@ type Game = {
   imageUrl: string;
   minPlayers?: number;
   maxPlayers?: number;
+  url?: string;
 };
 
 // Add this type definition
@@ -80,6 +81,7 @@ export const CreateGame = () => {
       imageUrl: spaceship,
       minPlayers: 2,
       maxPlayers: 2,
+      url: "/tg-app/game/play/asteroid",
     },
     // Add more games here
   ];

@@ -18,13 +18,13 @@ export enum GameStatus {
 
 interface Room {
   id: number;
-  players: [string, string][];
+  players: never[];
   status: string;
-  currentRound?: number;
   config: {
     max_rounds: number;
     min_players: number;
   };
+  game_name: string;
 }
 
 export const Rooms = () => {
@@ -80,6 +80,7 @@ export const Rooms = () => {
               const gameDetails = {
                 ...game,
                 id: index,
+                game_name: "Dilemma",
                 status: status || "unknown",
                 currentRound: round || undefined,
               };
@@ -220,6 +221,7 @@ export const Rooms = () => {
                   <h2 className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-4">
                     Game #{room.id}
                   </h2>
+                  <p className="text-gray-300 text-sm mb-4">{room.game_name}</p>
                   <div className="space-y-3">
                     <div className="bg-[#160f28]/50 rounded-lg p-3">
                       <p className="text-gray-300">

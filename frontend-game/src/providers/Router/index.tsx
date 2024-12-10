@@ -8,6 +8,7 @@ import { Settings } from "../../screens/Settings";
 import { Test } from "../../screens/Test";
 import { CreateWallet } from "../../screens/Wallet/Create";
 import Play from "../../screens/Game/Play";
+import PlayAsteroid from "../../screens/Game/Play/Asteroid";
 
 const router = createBrowserRouter([
   {
@@ -46,6 +47,10 @@ const router = createBrowserRouter([
   {
     path: "/tg-app/game/play/:gameId",
     element: <Play />,
+  },
+  {
+    path: "/tg-app/game/play/asteroid/:gameId",
+    element: <PlayAsteroid />,
   },
 ]);
 
