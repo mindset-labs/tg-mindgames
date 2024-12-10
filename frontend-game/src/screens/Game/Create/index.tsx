@@ -265,138 +265,222 @@ export const CreateGame = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-gradient-to-b from-[#160f28] to-black">
-      <Navigation />
+    <>
+      <div className="pb-10 flex flex-col h-screen w-full bg-gradient-to-br from-[#160f28] via-[#1a1339] to-black animate-gradient">
+        <div className="container mx-auto px-4 py-8 pb-24 overflow-y-auto flex-1">
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-8 text-center">
+            Available Games
+          </h1>
 
-      <div className="container mx-auto px-4 py-8 overflow-y-auto flex-1">
-        <h1 className="text-3xl font-bold text-white mb-8">Available Games</h1>
-
-        {!isGameInProgress ? (
-          <div>
-            {!selectedGame ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[calc(100vh-12rem)] overflow-y-auto">
-                {availableGames.map((game) => (
-                  <div
-                    key={game.id}
-                    className="bg-white/10 rounded-lg p-4 cursor-pointer hover:bg-white/20 transition"
-                    onClick={() => setSelectedGame(game)}
-                  >
-                    <img
-                      src={game.imageUrl}
-                      alt={game.title}
-                      className="w-full h-48 object-cover rounded-lg mb-4"
-                    />
-                    <h2 className="text-xl font-bold text-white">
-                      {game.title}
-                    </h2>
-                  </div>
-                ))}
-              </div>
-            ) : !isGameCreated ? (
-              <div className="bg-white/10 rounded-lg p-8 max-w-2xl mx-auto max-h-[calc(100vh-12rem)] overflow-y-auto">
-                <button
-                  onClick={() => setSelectedGame(null)}
-                  className="text-white mb-4 hover:underline"
-                >
-                  ← Back to games
-                </button>
-
-                <img
-                  src={selectedGame.imageUrl}
-                  alt={selectedGame.title}
-                  className="w-full h-64 object-cover rounded-lg mb-6"
-                />
-                <h2 className="text-3xl font-bold text-white mb-4">
-                  {selectedGame.title}
-                </h2>
-                <p className="text-gray-300 mb-6">{selectedGame.description}</p>
-                <div className="text-gray-300 mb-6">
-                  Players: {selectedGame.minPlayers} - {selectedGame.maxPlayers}
+          {!isGameInProgress ? (
+            <div>
+              {!selectedGame ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {availableGames.map((game) => (
+                    <div
+                      key={game.id}
+                      className="bg-[#1f1635]/80 backdrop-blur-sm rounded-2xl p-6 
+                             border border-purple-500/10 hover:border-purple-500/20 
+                             transition-all shadow-lg hover:shadow-purple-500/20 cursor-pointer"
+                      onClick={() => setSelectedGame(game)}
+                    >
+                      <img
+                        src={game.imageUrl}
+                        alt={game.title}
+                        className="w-full h-48 object-cover rounded-xl mb-4 hover:scale-105 transition-transform duration-300"
+                      />
+                      <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                        {game.title}
+                      </h2>
+                    </div>
+                  ))}
                 </div>
-
-                <button
-                  onClick={createGame}
-                  disabled={isCreatingGame}
-                  className="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              ) : !isGameCreated ? (
+                <div
+                  className="bg-[#1f1635]/80 backdrop-blur-sm rounded-2xl p-8 max-w-2xl mx-auto 
+                            border border-purple-500/10 shadow-lg"
                 >
-                  {isCreatingGame ? "Creating..." : "Create Game"}
-                </button>
-              </div>
-            ) : (
-              <div className="bg-white/10 rounded-lg p-8 max-w-2xl mx-auto">
-                <h2 className="text-2xl font-bold text-white mb-4">
-                  Game Created!
-                </h2>
-                <div className="text-gray-300 space-y-4">
-                  <p>Game ID: {gameId}</p>
-                  <p>Status: {gameStatus?.status || "Pending"}</p>
-                  <p>Players: {gameDetails?.players?.length || 0}</p>
-                  <p>
-                    Current Round: {roundData?.current_round || "Not started"}
-                  </p>
+                  <button
+                    onClick={() => setSelectedGame(null)}
+                    className="text-blue-400 hover:text-blue-300 mb-4 hover:underline transition-colors flex items-center gap-2"
+                  >
+                    <span>←</span> Back to games
+                  </button>
 
-                  <div className="flex space-x-4 mt-6">
-                    <button
-                      onClick={joinGame}
-                      disabled={isJoiningGame}
-                      className="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isJoiningGame ? "Joining..." : "Join Game"}
-                    </button>
-                    <button
-                      onClick={refreshGameData}
-                      className="bg-gray-600 text-white px-8 py-3 rounded-lg hover:bg-gray-700 transition"
-                    >
-                      Refresh Data
-                    </button>
+                  <img
+                    src={selectedGame.imageUrl}
+                    alt={selectedGame.title}
+                    className="w-full h-64 object-cover rounded-xl mb-6 hover:scale-105 transition-transform duration-300"
+                  />
+                  <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-4">
+                    {selectedGame.title}
+                  </h2>
+                  <p className="text-gray-300 mb-6 leading-relaxed">
+                    {selectedGame.description}
+                  </p>
+                  <div className="bg-[#160f28]/50 rounded-lg p-4 mb-6">
+                    <p className="text-gray-300">
+                      Players:{" "}
+                      <span className="text-white font-medium">
+                        {selectedGame.minPlayers} - {selectedGame.maxPlayers}
+                      </span>
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={createGame}
+                    disabled={isCreatingGame}
+                    className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 
+                           text-white font-bold py-3 px-4 rounded-lg transition-all
+                           shadow-lg hover:shadow-purple-500/20 border border-purple-400/30
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isCreatingGame ? "Creating..." : "Create Game"}
+                  </button>
+                </div>
+              ) : (
+                <div
+                  className="bg-[#1f1635]/80 backdrop-blur-sm rounded-2xl p-8 max-w-2xl mx-auto 
+                            border border-purple-500/10 shadow-lg"
+                >
+                  <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-6">
+                    Game Created!
+                  </h2>
+                  <div className="space-y-4">
+                    <div className="bg-[#160f28]/50 rounded-lg p-4">
+                      <p className="text-gray-300">
+                        Game ID:{" "}
+                        <span className="text-white font-medium">{gameId}</span>
+                      </p>
+                    </div>
+                    <div className="bg-[#160f28]/50 rounded-lg p-4">
+                      <p className="text-gray-300">
+                        Status:{" "}
+                        <span className="text-white font-medium">
+                          {gameStatus?.status || "Pending"}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="bg-[#160f28]/50 rounded-lg p-4">
+                      <p className="text-gray-300">
+                        Players:{" "}
+                        <span className="text-white font-medium">
+                          {gameDetails?.players?.length || 0}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="bg-[#160f28]/50 rounded-lg p-4">
+                      <p className="text-gray-300">
+                        Current Round:{" "}
+                        <span className="text-white font-medium">
+                          {roundData?.current_round || "Not started"}
+                        </span>
+                      </p>
+                    </div>
+
+                    <div className="flex gap-4 mt-6">
+                      <button
+                        onClick={joinGame}
+                        disabled={isJoiningGame}
+                        className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
+                               text-white font-bold py-3 px-4 rounded-lg transition-all
+                               shadow-lg hover:shadow-blue-500/20 border border-blue-400/30
+                               disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isJoiningGame ? "Joining..." : "Join Game"}
+                      </button>
+                      <button
+                        onClick={refreshGameData}
+                        className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 
+                               text-white font-bold py-3 px-4 rounded-lg transition-all
+                               shadow-lg hover:shadow-gray-500/20 border border-gray-400/30"
+                      >
+                        Refresh Data
+                      </button>
+                    </div>
+
                     {gameDetails?.players?.some(
                       ([address]) => address === account?.bech32Address
                     ) && (
                       <button
                         onClick={() => navigate(`/tg-app/game/play/${gameId}`)}
-                        className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition"
+                        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
+                               text-white font-bold py-3 px-4 rounded-lg transition-all
+                               shadow-lg hover:shadow-green-500/20 border border-green-400/30"
                       >
                         Play Game
                       </button>
                     )}
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="bg-white/10 rounded-lg p-8 max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold text-white mb-4">
-              Game {gameId} in progress
-            </h2>
-            <div className="text-gray-300 space-y-4">
-              <p>Current round: {roundData?.current_round}</p>
-              <p>Status: {gameStatus?.status}</p>
-              <p>Players: {gameDetails?.players?.length || 0}</p>
-              {gameDetails?.players?.map((player: any) => (
-                <div key={player.telegramId}>{player.telegramId}</div>
-              ))}
-
-              {gameDetails?.players?.length === 2 && !isGameStarted && (
-                <button
-                  onClick={startGame}
-                  disabled={isStartingGame}
-                  className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isStartingGame ? "Starting..." : "Start Game"}
-                </button>
               )}
-
-              <button
-                onClick={() => setIsGameInProgress(false)}
-                className="bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition"
-              >
-                End Game
-              </button>
             </div>
-          </div>
-        )}
+          ) : (
+            <div
+              className="bg-[#1f1635]/80 backdrop-blur-sm rounded-2xl p-8 max-w-2xl mx-auto 
+                         border border-purple-500/10 shadow-lg"
+            >
+              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-6">
+                Game {gameId} in progress
+              </h2>
+              <div className="space-y-4">
+                <div className="bg-[#160f28]/50 rounded-lg p-4">
+                  <p className="text-gray-300">
+                    Current round:{" "}
+                    <span className="text-white font-medium">
+                      {roundData?.current_round}
+                    </span>
+                  </p>
+                </div>
+                <div className="bg-[#160f28]/50 rounded-lg p-4">
+                  <p className="text-gray-300">
+                    Status:{" "}
+                    <span className="text-white font-medium">
+                      {gameStatus?.status}
+                    </span>
+                  </p>
+                </div>
+                <div className="bg-[#160f28]/50 rounded-lg p-4">
+                  <p className="text-gray-300">
+                    Players:{" "}
+                    <span className="text-white font-medium">
+                      {gameDetails?.players?.length || 0}
+                    </span>
+                  </p>
+                  {gameDetails?.players?.map((player: any) => (
+                    <div key={player.telegramId} className="text-blue-400 mt-2">
+                      @{player.telegramId}
+                    </div>
+                  ))}
+                </div>
+
+                {gameDetails?.players?.length === 2 && !isGameStarted && (
+                  <button
+                    onClick={startGame}
+                    disabled={isStartingGame}
+                    className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
+                           text-white font-bold py-3 px-4 rounded-lg transition-all mt-4
+                           shadow-lg hover:shadow-green-500/20 border border-green-400/30
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isStartingGame ? "Starting..." : "Start Game"}
+                  </button>
+                )}
+
+                <button
+                  onClick={() => setIsGameInProgress(false)}
+                  className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 
+                         text-white font-bold py-3 px-4 rounded-lg transition-all
+                         shadow-lg hover:shadow-red-500/20 border border-red-400/30"
+                >
+                  End Game
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+      <Navigation />
+    </>
   );
 };

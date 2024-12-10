@@ -43,49 +43,67 @@ export const GameHome = () => {
 
   return (
     <>
-      <div className="flex flex-col h-screen w-full bg-gradient-to-b from-[#160f28] to-black">
-        <main className="flex-1 container mx-auto px-4 py-8 mt-16 overflow-y-auto h-[calc(100vh-64px)] max-w-7xl">
+      <div className="pb-24 flex flex-col h-screen w-full bg-gradient-to-br from-[#160f28] via-[#1a1339] to-black animate-gradient">
+        <main className="flex-1 container mx-auto px-4 py-8 mt-3 overflow-y-auto h-[calc(100vh-64px)] max-w-7xl">
           <h1 className="text-4xl font-bold text-white mb-8 text-center">
             Welcome, {telegramName ?? "Gamer"}
           </h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {/* Player Stats Card */}
-            <div className="bg-[#1f1635] rounded-lg p-6 shadow-lg">
-              <h2 className="text-2xl font-semibold text-white mb-4">Stats</h2>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="bg-[#1f1635]/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-purple-500/10 hover:border-purple-500/20 transition-all">
+              <h2 className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-4">
+                Stats
+              </h2>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-[#160f28]/50 rounded-lg">
                   <span className="text-gray-300">Games Played</span>
-                  <span className="text-white font-medium">{gamesCount}</span>
+                  <span className="text-white font-medium bg-purple-500/20 px-3 py-1 rounded-full">
+                    {gamesCount}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Recent Activity Card */}
-            <div className="bg-[#1f1635] rounded-lg p-6 shadow-lg">
-              <h2 className="text-2xl font-semibold text-white mb-4">
-                Recent Activity
+            <div
+              className="bg-[#1f1635]/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg 
+                            border border-purple-500/10 hover:border-purple-500/20 transition-all"
+            >
+              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-6">
+                My Tokens
               </h2>
               <div className="space-y-4">
-                {[1, 2].map((_, index) => (
-                  <div
-                    key={index}
-                    className="border-b border-gray-700 pb-3 last:border-0"
-                  >
-                    <p className="text-white">Game Session #{index + 1}</p>
-                    <p className="text-sm text-gray-400">2 hours ago</p>
+                <div className="bg-[#160f28]/50 rounded-lg p-4 flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
+                      <span className="text-white font-bold">$</span>
+                    </div>
+                    <span className="text-white font-medium">XION</span>
                   </div>
-                ))}
+                  <span className="text-white font-bold">0.00</span>
+                </div>
+
+                <div className="bg-[#160f28]/50 rounded-lg p-4 flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center">
+                      <span className="text-white font-bold">G</span>
+                    </div>
+                    <span className="text-white font-medium">Game Tokens</span>
+                  </div>
+                  <span className="text-white font-bold">0.00</span>
+                </div>
               </div>
             </div>
 
-            {/* Available Games Card */}
-            <div className="bg-[#1f1635] rounded-lg p-6 shadow-lg">
-              <h2 className="text-2xl font-semibold text-white mb-4">Tests</h2>
+            <div className="bg-[#1f1635]/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-purple-500/10 hover:border-purple-500/20 transition-all">
+              <h2 className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-4">
+                Tests
+              </h2>
               <div className="space-y-4">
                 <button
                   onClick={() => navigate("/tg-app/test")}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-colors"
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 
+                           text-white py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-purple-500/20
+                           border border-purple-400/30"
                 >
                   Cw_counter
                 </button>
