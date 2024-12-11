@@ -1,4 +1,6 @@
 import MindGamesLogo from "../../../assets/mind-games-logo.png";
+import Mind from "../../../assets/mind.png";
+import MindGames from "../../../assets/mind-games.png";
 import { useNavigate } from "react-router-dom";
 export const Landing = () => {
   const navigate = useNavigate();
@@ -25,20 +27,11 @@ export const Landing = () => {
         <div className="flex flex-col items-center gap-8">
           <div className="flex flex-col items-center">
             <img
-              className="h-24 w-auto rounded-2xl hover:scale-110 transition-all duration-500 
-                         shadow-xl hover:shadow-blue-500/20 animate-float"
-              src={MindGamesLogo}
+              className="h-26 w-auto rounded-2xl hover:scale-110 transition-all duration-500 
+                         shadow-xl hover:shadow-blue-500/20 animate-float mb-10"
+              src={MindGames}
               alt="Mind Games Logo"
             />
-
-            <div className="w-full flex-col items-center justify-center inline-flex mt-4 mb-2">
-              <div
-                className="text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-blue-500 
-                             text-3xl font-bold font-exo-2 leading-normal animate-gradient-x"
-              >
-                Mind Games
-              </div>
-            </div>
 
             {/* Feature Cards */}
             <div className="grid gap-2 w-full">
@@ -48,7 +41,7 @@ export const Landing = () => {
                   className="group hover:bg-blue-500/10 p-3 rounded-xl border border-transparent
                            hover:border-blue-500/20 transition-all duration-300 flex justify-center"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
                     <span className="text-xl group-hover:scale-125 transition-transform duration-300">
                       {feature.icon}
                     </span>
