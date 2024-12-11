@@ -56,7 +56,7 @@ export const Settings = () => {
     <>
       <div className="pb-10 flex flex-col h-screen w-full bg-gradient-to-br from-[#160f28] via-[#1a1339] to-black animate-gradient">
         <div className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-4 py-8 pb-24">
+          <div className="container mx-auto px-4 py-8 pb-24 flex flex-col items-center">
             <img
               className="h-23 w-auto rounded-2xl hover:scale-110 transition-all duration-500 
                          shadow-xl hover:shadow-blue-500/20 animate-float mb-10"
