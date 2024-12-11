@@ -115,7 +115,7 @@ export const Settings = () => {
               </div>
 
               {/* Network Settings - Only show when logged in */}
-              {account && (
+              {/* {account && (
                 <div
                   className="bg-[#1f1635]/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg 
                             border border-purple-500/10 hover:border-purple-500/20 transition-all"
@@ -155,7 +155,7 @@ export const Settings = () => {
                     ))}
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Version Info - Always visible */}
               <div
