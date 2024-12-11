@@ -9,6 +9,7 @@ import { CONTRACTS, TREASURY } from "../../../constants/contracts";
 import WebApp from "@twa-dev/sdk";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import RoomsLogo from "../../../assets/rooms.png";
 export enum GameStatus {
   PENDING = "pending",
   CREATED = "created",
@@ -237,9 +238,12 @@ export const Rooms = () => {
       <div className="pb-24 flex flex-col h-screen w-full bg-gradient-to-br from-[#160f28] via-[#1a1339] to-black animate-gradient overflow-hidden">
         <div className="flex-1 overflow-y-auto">
           <div className="flex flex-col items-center p-8">
-            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-8">
-              Available Rooms
-            </h1>
+            <img
+              className="h-23 w-auto rounded-2xl hover:scale-110 transition-all duration-500 
+                         shadow-xl hover:shadow-blue-500/20 animate-float mb-10"
+              src={RoomsLogo}
+              alt="Mind Games Logo"
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
               {rooms.map((room) => (

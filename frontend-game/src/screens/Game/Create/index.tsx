@@ -556,7 +556,6 @@ export const CreateGame = () => {
                       </span>
                     </p>
                   </div>
-
                   <button
                     onClick={handleCreateGame}
                     disabled={isCreatingGame}
