@@ -1,10 +1,12 @@
 import { Action, configureStore, ThunkAction } from '@reduxjs/toolkit';
 
 import { walletReducer } from '../features/walletSlice';
+import { asteroidReducer } from '../features/asteroidSlice';
 
 export const store = configureStore({
     reducer: {
         wallet: walletReducer,
+        asteroid: asteroidReducer,
     },
 });
 

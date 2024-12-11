@@ -1,14 +1,20 @@
-import React from "react";
 import {
-  RocketIcon,
-  ShieldIcon,
-  ZapIcon,
-  StarIcon,
-  GlobeIcon,
-  LockIcon,
-  ShareIcon,
-  EyeIcon,
-} from "lucide-react";
+  useAbstraxionAccount,
+  useAbstraxionSigningClient,
+} from "@burnt-labs/abstraxion";
+import { CwCooperationDilemmaClient } from "../../codegen/CwCooperationDilemma.client";
+import { useQuery } from "@tanstack/react-query";
+import { RocketIcon } from "lucide-react";
+import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import { CONTRACTS, TREASURY } from "../constants/contracts";
+import { useParams } from "react-router-dom";
+import { useState } from "react";
+import {
+  setGameId,
+  setNonce,
+  setCommittedValue,
+} from "../features/asteroidSlice";
+import { useAppDispatch, useAppSelector } from "../app/hook";
 
 const GAME_MODES = [
   {
@@ -18,16 +24,7 @@ const GAME_MODES = [
     icon: RocketIcon,
     color: "blue",
   },
-  {
-    id: "defense",
-    name: "Dictator",
-    description: "Trick the enemy",
-    icon: ShieldIcon,
-    color: "emerald",
-  },
 ];
-
-const STAKE_OPTIONS = [1, 2, 5, 10];
 
 interface GameSetupOptions {
   stake: number;
@@ -39,31 +36,153 @@ interface GameOnboardingProps {
   onStart: () => void;
   options: GameSetupOptions;
   onOptionsChange: (options: GameSetupOptions) => void;
+  gameId?: number;
 }
 
 export default function GameOnboarding({
   onStart,
   options,
   onOptionsChange,
+  gameId: propGameId,
 }: GameOnboardingProps) {
-  const [showPreview, setShowPreview] = React.useState(false);
+  const { gameId: urlGameId } = useParams();
+  const gameId = propGameId || Number(urlGameId);
 
-  const handleShareGame = () => {
-    const gameLink = `https://stackblitz.com/game/${Date.now()}`;
-    window.open(gameLink, "_blank");
+  const dispatch = useAppDispatch();
+
+  const { data: account } = useAbstraxionAccount();
+  const { client } = useAbstraxionSigningClient();
+
+  const [isStartingGame, setIsStartingGame] = useState(false);
+  const [isGameStarted, setIsGameStarted] = useState(false);
+  const [isGameInProgress, setIsGameInProgress] = useState(false);
+  const [isRevealing, setIsRevealing] = useState(false);
+  const [committedValue, setCommittedValue] = useState<string>("");
+
+  const nonce = useAppSelector((state) => state.asteroid.nonce);
+  const score = useAppSelector((state) => state.asteroid.score);
+
+  // Query client for Prisoner's Dilemma
+  const asteroidQueryClient = new CwCooperationDilemmaClient(
+    client as SigningCosmWasmClient,
+    account?.bech32Address,
+    CONTRACTS.cwAsteroid
+  );
+
+  // Query game status and details
+  const { data: gameStatus } = useQuery({
+    queryKey: ["asteroidGameStatus", gameId],
+    queryFn: async () => {
+      if (!gameId) return null;
+      const status = await asteroidQueryClient.getGameStatus({
+        gameId: gameId,
+      });
+
+      console.log("Game Status:", status);
+      return status;
+    },
+    enabled: !!client && !!gameId,
+    refetchInterval: 5000,
+  });
+
+  const { data: gameDetails } = useQuery({
+    queryKey: ["asteroidGameDetails", gameId],
+    queryFn: async () => {
+      if (!gameId) return null;
+      const details = await asteroidQueryClient.getGame({
+        gameId: gameId,
+      });
+      return details;
+    },
+    enabled: !!client && !!gameId,
+    refetchInterval: 5000,
+  });
+
+  console.log("Game Details:", gameDetails?.players.length);
+
+  console.log("=== Game Contract Data ===");
+  console.log("Game Status:", JSON.stringify(gameStatus, null, 2));
+  console.log("Game Details:", JSON.stringify(gameDetails, null, 2));
+  console.log("=====================");
+
+  const startGame = async () => {
+    try {
+      setIsStartingGame(true);
+      if (!gameId) {
+        throw new Error("Game ID is not set");
+      }
+
+      const tx = await client?.execute(
+        account?.bech32Address,
+        CONTRACTS.cwAsteroid,
+        {
+          lifecycle: {
+            start_game: {
+              game_id: gameId,
+            },
+          },
+        },
+        {
+          amount: [{ amount: "1", denom: "uxion" }],
+          gas: "500000",
+          granter: TREASURY.treasury,
+        },
+        "", // memo
+        []
+      );
+      console.log(tx);
+      setIsGameStarted(true);
+      setIsGameInProgress(true);
+    } catch (error) {
+      console.error("Failed to start game:", error);
+    } finally {
+      setIsStartingGame(false);
+    }
+  };
+
+  const handleReveal = async () => {
+    console.log("Revealing round:", { score, nonce });
+    try {
+      setIsRevealing(true);
+      if (!client || !account?.bech32Address) return;
+
+      const revealTx = await client.execute(
+        account.bech32Address,
+        CONTRACTS.cwAsteroid,
+        {
+          lifecycle: {
+            reveal_round: {
+              game_id: Number(gameId),
+              value: score,
+              nonce: parseInt(nonce),
+            },
+          },
+        },
+        {
+          amount: [{ amount: "1", denom: "uxion" }],
+          gas: "500000",
+          granter: TREASURY.treasury,
+        },
+        "",
+        []
+      );
+      console.log(revealTx);
+    } catch (error) {
+      console.error("Error revealing round:", error);
+      console.log({ committedValue, nonce });
+    } finally {
+      setIsRevealing(false);
+    }
   };
 
   return (
-    <div className="absolute inset-0  flex flex-col items-center pb-24">
+    <div className="absolute inset-0 flex items-center justify-center">
       <div className="w-full max-h-full overflow-y-auto py-4 px-4 flex flex-col items-center">
         <div className="max-w-sm w-full flex flex-col items-center relative z-10">
           <h2 className="text-2xl font-bold text-white mb-4">Play to Earn</h2>
 
           {/* Game Mode Selection */}
           <div className="w-full mb-6">
-            <label className="block text-base text-white/90 mb-2">
-              Game Selection
-            </label>
             <div className="grid gap-2">
               {GAME_MODES.map((mode) => {
                 const Icon = mode.icon;
@@ -99,102 +218,60 @@ export default function GameOnboarding({
             </div>
           </div>
 
-          {/* Stake Selection */}
-          <div className="w-full mb-4">
-            <label className="block text-base text-white/90 mb-2">
-              Select Stake Amount
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {STAKE_OPTIONS.map((amount) => (
-                <button
-                  key={amount}
-                  onClick={() => onOptionsChange({ ...options, stake: amount })}
-                  className={`flex items-center justify-center space-x-1.5 p-2.5 rounded-lg border-2 transition-all
-                    ${
-                      amount === options.stake
-                        ? "border-yellow-400 bg-yellow-400/20"
-                        : "border-white/20 hover:border-white/40"
-                    }`}
-                >
-                  <StarIcon className="w-4 h-4 text-yellow-400" />
-                  <span className="text-base font-semibold text-white">
-                    {amount}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Game Type Selection */}
-          <div className="w-full mb-4">
-            <label className="block text-base text-white/90 mb-2">
-              Game Visibility
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() =>
-                  onOptionsChange({ ...options, isPrivate: false })
-                }
-                className={`flex items-center justify-center space-x-1.5 p-2.5 rounded-lg border-2 transition-all
-                  ${
-                    !options.isPrivate
-                      ? "border-blue-400 bg-blue-400/20"
-                      : "border-white/20 hover:border-white/40"
-                  }`}
-              >
-                <GlobeIcon className="w-4 h-4" />
-                <span className="font-medium">Public</span>
-              </button>
-              <button
-                onClick={() => onOptionsChange({ ...options, isPrivate: true })}
-                className={`flex items-center justify-center space-x-1.5 p-2.5 rounded-lg border-2 transition-all
-                  ${
-                    options.isPrivate
-                      ? "border-blue-400 bg-blue-400/20"
-                      : "border-white/20 hover:border-white/40"
-                  }`}
-              >
-                <LockIcon className="w-4 h-4" />
-                <span className="font-medium">Private</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Preview Section for Private Games */}
-          {options.isPrivate && (
-            <div className="w-full mb-4">
-              <button
-                onClick={() => setShowPreview(!showPreview)}
-                className="w-full flex items-center justify-between p-3 bg-indigo-900/50 rounded-lg hover:bg-indigo-900/70 transition-all"
-              >
-                <div className="flex items-center space-x-2">
-                  <EyeIcon className="w-4 h-4 text-indigo-300" />
-                  <span className="text-sm text-indigo-200">Preview Link</span>
-                </div>
-                <div className="text-xs text-indigo-300 truncate ml-2">
-                  stackblitz.com/game/xyz...
-                </div>
-              </button>
-            </div>
-          )}
-
-          {/* Action Buttons */}
+          {/* Action Buttons - Updated with result checking */}
           <div className="flex flex-col w-full gap-2">
-            <button
-              onClick={onStart}
-              className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg font-semibold transition-all active:scale-[0.98]"
-            >
-              Start Game
-            </button>
-
-            {options.isPrivate && (
+            {gameStatus === "ready" ? (
               <button
-                onClick={handleShareGame}
-                className="w-full px-4 py-2.5 bg-indigo-900/50 hover:bg-indigo-900/70 text-white rounded-lg font-semibold flex items-center justify-center space-x-2"
+                onClick={startGame}
+                className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 
+                         hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg 
+                         font-semibold transition-all active:scale-[0.98]"
               >
-                <ShareIcon className="w-4 h-4" />
-                <span>Share Game Link</span>
+                Start Game
               </button>
+            ) : null}
+            {gameStatus === "in_progress" || gameStatus === "created" ? (
+              <>
+                {gameDetails?.players?.length === 1 ? (
+                  <div className="text-center text-white/70">
+                    Waiting for another player to join...
+                  </div>
+                ) : gameDetails?.rounds?.[0]?.commits?.length === 2 ? (
+                  <button
+                    onClick={handleReveal}
+                    disabled={isRevealing}
+                    className="mt-3 w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 
+                               text-white font-bold py-2 px-4 rounded-lg transition-all shadow-lg hover:shadow-purple-500/20 
+                               border border-purple-400/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isRevealing ? "Revealing..." : "Reveal Round"}
+                  </button>
+                ) : gameDetails?.rounds?.[0]?.commits?.some(
+                    ([address]) => address === account?.bech32Address
+                  ) ? (
+                  <div className="text-center text-white/70">
+                    Waiting for other player to play...
+                  </div>
+                ) : (
+                  <button
+                    onClick={onStart}
+                    className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 
+                               hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg 
+                               font-semibold transition-all active:scale-[0.98]"
+                  >
+                    Play!
+                  </button>
+                )}
+              </>
+            ) : gameStatus === "rounds_finished" ? (
+              <div className="text-center text-white font-bold text-xl">
+                Game Completed!
+              </div>
+            ) : null}
+            {gameStatus === "pending" && (
+              <div className="text-center text-white/70">
+                Waiting for result verification...
+              </div>
             )}
           </div>
         </div>

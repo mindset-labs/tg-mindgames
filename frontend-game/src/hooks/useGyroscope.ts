@@ -27,8 +27,8 @@ export function useGyroscope(): GyroscopeData {
       if (WebApp.isVersionAtLeast('6.1')) {
         // Disable vertical swipes and expand the view
        
-        WebApp.Gyroscope.requestGyroscope().then((isAvailable) => {
-          if (isAvailable) {
+        
+          if (  WebApp.Gyroscope.isStarted) {
             setData(prev => ({ ...prev, isSupported: true, calibrate }));
             WebApp.onEvent('gyroscopeChanged', (event) => {
               setData(current => ({
@@ -39,7 +39,7 @@ export function useGyroscope(): GyroscopeData {
               }));
             });
           }
-        });
+       
         return () => WebApp.offEvent('gyroscopeChanged');
       }
     }

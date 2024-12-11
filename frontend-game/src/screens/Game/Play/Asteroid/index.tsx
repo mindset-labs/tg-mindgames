@@ -24,6 +24,14 @@ import GameOnboarding from "../../../../components/GameOnboarding";
 import GameResult from "../../../../components/GameResult";
 import Navigation from "../../../../components/Navigation";
 import WebApp from "@twa-dev/sdk";
+import {
+  useAbstraxionAccount,
+  useAbstraxionSigningClient,
+} from "@burnt-labs/abstraxion";
+import { CONTRACTS, TREASURY } from "../../../../constants/contracts";
+import { useParams } from "react-router-dom";
+import { setScore, setNonce } from "../../../../features/asteroidSlice";
+import { useAppDispatch } from "../../../../app/hook";
 
 interface GameSetupOptions {
   stake: number;
@@ -55,6 +63,82 @@ export default function PlayAsteroid() {
     mode: "classic",
   });
   const [isSettingUp, setIsSettingUp] = useState(true);
+  const { data: account } = useAbstraxionAccount();
+  const { client } = useAbstraxionSigningClient();
+
+  const generateNonce = () => {
+    return Math.floor(Math.random() * 1000000);
+  };
+
+  const { gameId } = useParams<{ gameId: string }>();
+
+  const [isSubmittingChoice, setIsSubmittingChoice] = useState(false);
+  // const [nonce, setNonce] = useState<string>("");
+  const [committedValue, setCommittedValue] = useState<number>();
+
+  const dispatch = useAppDispatch();
+
+  const handleCommitScore = async (score: number) => {
+    dispatch(setScore(score.toString()));
+
+    if (!client || !account?.bech32Address) return;
+
+    try {
+      setIsSubmittingChoice(true);
+
+      // Generate and save nonce
+      const newNonce = generateNonce();
+      // setNonce(newNonce.toString());
+
+      dispatch(setNonce(newNonce));
+
+      console.log("Nonce:", newNonce);
+      console.log("Score:", score);
+
+      // Save original choice for reveal later
+      setCommittedValue(score);
+      console.log("Committed value:", score);
+
+      // Create the hash using the same method
+      const encoder = new TextEncoder();
+      const choiceBytes = encoder.encode(score.toString());
+      const nonceBytes = new Uint8Array(
+        new BigUint64Array([BigInt(newNonce)]).buffer
+      ).reverse();
+
+      const hashValue = await crypto.subtle.digest(
+        "SHA-256",
+        new Uint8Array([...choiceBytes, ...nonceBytes])
+      );
+      const hashedValue = Array.from(new Uint8Array(hashValue))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      await client.execute(
+        account.bech32Address,
+        CONTRACTS.cwAsteroid,
+        {
+          lifecycle: {
+            commit_round: {
+              game_id: Number(gameId),
+              value: hashedValue,
+            },
+          },
+        },
+        {
+          amount: [{ amount: "1", denom: "uxion" }],
+          gas: "500000",
+          granter: TREASURY.treasury,
+        },
+        "",
+        []
+      );
+    } catch (error) {
+      console.error("Error submitting choice:", error);
+    } finally {
+      setIsSubmittingChoice(false);
+    }
+  };
 
   const handleReturnToOnboarding = () => {
     setGameOver(false);
@@ -186,6 +270,8 @@ export default function PlayAsteroid() {
       });
 
       if (detectCollision(spaceshipPosition, asteroids)) {
+        // alert("Game results committed!");
+        handleCommitScore(distance);
         setGameOver(true);
         setHighScore((prev) => Math.max(prev, distance));
       }

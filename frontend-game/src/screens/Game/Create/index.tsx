@@ -99,6 +99,12 @@ export const CreateGame = () => {
     "xion1lp7xue46k9909xycngp5ms459hsldc5cqqquqw0an0g4qnsahm4snyczyx"
   );
 
+  const asteroidQueryClient = new LifecycleClient(
+    client as SigningCosmWasmClient,
+    account?.bech32Address,
+    CONTRACTS.cwAsteroid
+  );
+
   const { data: roundData } = useQuery({
     queryKey: ["currentRound", gameId],
     queryFn: async () => {
@@ -138,11 +144,62 @@ export const CreateGame = () => {
     refetchInterval: 5000,
   });
 
+  const { data: asteroidRoundData } = useQuery({
+    queryKey: ["asteroidCurrentRound", gameId],
+    queryFn: async () => {
+      if (!gameId) return null;
+      const round = await asteroidQueryClient.getCurrentRound({
+        gameId: gameId as number,
+      });
+      return round;
+    },
+    enabled: !!gameId && !!client && selectedGame?.id === "2",
+    refetchInterval: 5000,
+  });
+
+  const { data: asteroidGameStatus } = useQuery({
+    queryKey: ["asteroidGameStatus", gameId],
+    queryFn: async () => {
+      if (!gameId) return null;
+      const status = await asteroidQueryClient.getGameStatus({
+        gameId: gameId as number,
+      });
+      return status;
+    },
+    enabled: !!gameId && !!client && selectedGame?.id === "2",
+    refetchInterval: 5000,
+  });
+
+  const { data: asteroidGameDetails } = useQuery({
+    queryKey: ["asteroidGameDetails", gameId],
+    queryFn: async () => {
+      if (!gameId) return null;
+      const details = await asteroidQueryClient.getGame({
+        gameId: gameId as number,
+      });
+      return details;
+    },
+    enabled: !!gameId && !!client && selectedGame?.id === "2",
+    refetchInterval: 5000,
+  });
+
   // Function to manually refresh all queries
   const refreshGameData = () => {
-    queryClient.invalidateQueries({ queryKey: ["currentRound", gameId] });
-    queryClient.invalidateQueries({ queryKey: ["gameStatus", gameId] });
-    queryClient.invalidateQueries({ queryKey: ["gameDetails", gameId] });
+    if (selectedGame?.id === "1") {
+      queryClient.invalidateQueries({ queryKey: ["currentRound", gameId] });
+      queryClient.invalidateQueries({ queryKey: ["gameStatus", gameId] });
+      queryClient.invalidateQueries({ queryKey: ["gameDetails", gameId] });
+    } else if (selectedGame?.id === "2") {
+      queryClient.invalidateQueries({
+        queryKey: ["asteroidCurrentRound", gameId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["asteroidGameStatus", gameId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["asteroidGameDetails", gameId],
+      });
+    }
   };
 
   const createGame = async () => {
@@ -268,13 +325,123 @@ export const CreateGame = () => {
   };
 
   const createAsteroidGame = async () => {
-    alert("createAsteroidGame");
+    try {
+      setIsCreatingGame(true);
+      if (!client) {
+        console.error("Wallet not connected");
+        return;
+      }
+
+      const gameConfig: GameConfig = {
+        has_turns: true,
+        max_rounds: 1,
+        min_deposit: "0",
+        min_players: 2,
+        skip_reveal: false,
+      };
+
+      console.log("My address", account?.bech32Address);
+
+      await client
+        ?.execute(
+          account?.bech32Address,
+          CONTRACTS.cwAsteroid,
+          {
+            lifecycle: {
+              create_game: { config: gameConfig },
+            },
+          },
+          {
+            amount: [{ amount: "1", denom: "uxion" }],
+            gas: "500000",
+            granter: TREASURY.treasury,
+          },
+          "", // memo
+          []
+        )
+        .then((res) => {
+          console.log("Transaction response:", res);
+          const gameId = res.events
+            .find((e) => e.type === "wasm")
+            ?.attributes.find((a) => a.key === "game_id")?.value;
+          if (gameId) {
+            setGameId(parseInt(gameId));
+            console.log("Game ID:", gameId);
+            setIsGameCreated(true);
+          }
+        })
+        .catch((error) => {
+          console.error("Transaction failed:", error);
+        })
+        .finally(() => {
+          setIsCreatingGame(false);
+        });
+    } catch (error) {
+      console.error("Create game failed:", error);
+      setIsCreatingGame(false);
+    }
   };
   const joinAsteroidGame = async () => {
-    alert("joinAsteroidGame");
+    try {
+      setIsJoiningGame(true);
+      console.log("Joining game");
+
+      const tx = await client?.execute(
+        account?.bech32Address,
+        CONTRACTS.cwAsteroid,
+        {
+          lifecycle: {
+            join_game: { game_id: gameId, telegram_id: telegramName ?? "" },
+          },
+        },
+        {
+          amount: [{ amount: "1", denom: "uxion" }],
+          gas: "500000",
+          granter: TREASURY.treasury,
+        },
+        "", // memo
+        []
+      );
+      console.log(tx);
+    } catch (error) {
+      console.error("Failed to join game:", error);
+    } finally {
+      setIsJoiningGame(false);
+    }
   };
   const startAsteroidGame = async () => {
-    alert("startAsteroidGame");
+    try {
+      setIsStartingGame(true);
+      if (!gameId) {
+        throw new Error("Game ID is not set");
+      }
+
+      const tx = await client?.execute(
+        account?.bech32Address,
+        CONTRACTS.cwAsteroid,
+        {
+          lifecycle: {
+            start_game: {
+              game_id: gameId,
+            },
+          },
+        },
+        {
+          amount: [{ amount: "1", denom: "uxion" }],
+          gas: "500000",
+          granter: TREASURY.treasury,
+        },
+        "", // memo
+        []
+      );
+      console.log(tx);
+      setIsGameStarted(true);
+      setIsGameInProgress(true);
+    } catch (error) {
+      console.error("Failed to start game:", error);
+    } finally {
+      setIsStartingGame(false);
+    }
   };
 
   const handleCreateGame = async () => {
@@ -457,11 +624,20 @@ export const CreateGame = () => {
                       </button>
                     </div>
 
-                    {gameDetails?.players?.some(
-                      ([address]) => address === account?.bech32Address
+                    {(selectedGame?.id === "2"
+                      ? asteroidGameDetails?.players
+                      : gameDetails?.players
+                    )?.some(
+                      (player) => player[0] === account?.bech32Address
                     ) && (
                       <button
-                        onClick={() => navigate(`/tg-app/game/play/${gameId}`)}
+                        onClick={() =>
+                          navigate(
+                            selectedGame?.id === "2"
+                              ? `/tg-app/game/play/asteroid/${gameId}`
+                              : `/tg-app/game/play/${gameId}`
+                          )
+                        }
                         className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
                                text-white font-bold py-3 px-4 rounded-lg transition-all
                                shadow-lg hover:shadow-green-500/20 border border-green-400/30"

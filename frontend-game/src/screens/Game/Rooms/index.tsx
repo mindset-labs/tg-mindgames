@@ -8,6 +8,7 @@ import { CwCooperationDilemmaClient } from "../../../../codegen/CwCooperationDil
 import { CONTRACTS, TREASURY } from "../../../constants/contracts";
 import WebApp from "@twa-dev/sdk";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 export enum GameStatus {
   PENDING = "pending",
   CREATED = "created",
@@ -31,6 +32,8 @@ export const Rooms = () => {
   const { data: account } = useAbstraxionAccount();
   const { client } = useAbstraxionSigningClient();
 
+  const navigate = useNavigate();
+
   const { data: telegramName } = useQuery({
     queryKey: ["telegramName"],
     queryFn: async () => {
@@ -49,6 +52,12 @@ export const Rooms = () => {
     CONTRACTS.cwCooperationDilemma // Your contract address
   );
 
+  const asteroidQueryClient = new CwCooperationDilemmaClient(
+    client,
+    account?.bech32Address,
+    CONTRACTS.cwAsteroid
+  );
+
   const {
     data: rooms = [],
     isLoading,
@@ -60,16 +69,21 @@ export const Rooms = () => {
       if (!client || !contractQueryClient) return [];
 
       try {
-        const allGames = await contractQueryClient.getGamesCount();
-        console.log("Total games count:", allGames);
+        // Fetch games count from both contracts
+        const [dilemmaGamesCount, asteroidGamesCount] = await Promise.all([
+          contractQueryClient.getGamesCount(),
+          asteroidQueryClient.getGamesCount(),
+        ]);
+        console.log(
+          "Total games count - Dilemma:",
+          dilemmaGamesCount,
+          "Asteroid:",
+          asteroidGamesCount
+        );
 
-        if (typeof allGames !== "number") {
-          console.error("Invalid games count received");
-          return [];
-        }
-
-        const gamesWithDetails = await Promise.all(
-          Array.from({ length: allGames }, async (_, index) => {
+        // Fetch details for both types of games
+        const dilemmaGames = await Promise.all(
+          Array.from({ length: dilemmaGamesCount }, async (_, index) => {
             try {
               const [game, status, round] = await Promise.all([
                 contractQueryClient.getGame({ gameId: index }),
@@ -77,44 +91,55 @@ export const Rooms = () => {
                 contractQueryClient.getCurrentRound({ gameId: index }),
               ]);
 
-              const gameDetails = {
+              return {
                 ...game,
                 id: index,
                 game_name: "Dilemma",
                 status: status || "unknown",
                 currentRound: round || undefined,
               };
-
-              console.log(`Game #${index} details:`, {
-                id: gameDetails.id,
-                players: gameDetails.players,
-                status: gameDetails.status,
-                currentRound: gameDetails.currentRound,
-                config: gameDetails.config,
-              });
-
-              return gameDetails;
             } catch (gameError) {
               console.error(
-                `Failed to fetch details for game ${index}:`,
+                `Failed to fetch dilemma game ${index}:`,
                 gameError
               );
-              return {
-                id: index,
-                players: [],
-                status: "error",
-                config: {
-                  max_rounds: 0,
-                  min_players: 0,
-                },
-              };
+              return null;
             }
           })
         );
 
-        const filteredGames = gamesWithDetails.filter((game) => game !== null);
-        console.log("All games after filtering:", filteredGames);
-        return filteredGames;
+        const asteroidGames = await Promise.all(
+          Array.from({ length: asteroidGamesCount }, async (_, index) => {
+            try {
+              const [game, status, round] = await Promise.all([
+                asteroidQueryClient.getGame({ gameId: index }),
+                asteroidQueryClient.getGameStatus({ gameId: index }),
+                asteroidQueryClient.getCurrentRound({ gameId: index }),
+              ]);
+
+              return {
+                ...game,
+                id: index,
+                game_name: "Asteroid",
+                status: status || "unknown",
+                currentRound: round || undefined,
+              };
+            } catch (gameError) {
+              console.error(
+                `Failed to fetch asteroid game ${index}:`,
+                gameError
+              );
+              return null;
+            }
+          })
+        );
+
+        // Combine and filter out null values
+        const allGames = [...dilemmaGames, ...asteroidGames].filter(
+          (game) => game !== null
+        );
+        console.log("All games after filtering:", allGames);
+        return allGames;
       } catch (error) {
         console.error("Failed to fetch games:", error);
         throw new Error("Failed to load games. Please try again later.");
@@ -131,14 +156,19 @@ export const Rooms = () => {
     type: "success" | "error";
   } | null>(null);
 
-  const joinGame = async (gameId: number) => {
+  const joinGame = async (gameId: number, gameName: string) => {
     try {
       setIsJoiningGame(true);
-      console.log("Joining game");
+      console.log(`Joining ${gameName} game`);
+
+      const contractAddress =
+        gameName === "Asteroid"
+          ? CONTRACTS.cwAsteroid
+          : CONTRACTS.cwCooperationDilemma;
 
       const tx = await client?.execute(
         account?.bech32Address,
-        CONTRACTS.cwCooperationDilemma,
+        contractAddress,
         {
           lifecycle: {
             join_game: { game_id: gameId, telegram_id: telegramName ?? "" },
@@ -291,7 +321,7 @@ export const Rooms = () => {
                     {room.status === GameStatus.CREATED && (
                       <div className="space-y-2 mt-4">
                         <button
-                          onClick={() => joinGame(room.id)}
+                          onClick={() => joinGame(room.id, room.game_name)}
                           disabled={isJoiningGame}
                           className={`w-full ${
                             isJoiningGame
@@ -320,7 +350,11 @@ export const Rooms = () => {
                       room.status === "in_progress") && (
                       <button
                         onClick={() =>
-                          (window.location.href = `/tg-app/game/play/${room.id}`)
+                          navigate(
+                            room.game_name === "Asteroid"
+                              ? `/tg-app/game/play/asteroid/${room.id}`
+                              : `/tg-app/game/play/${room.id}`
+                          )
                         }
                         className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 
                                text-white font-bold py-3 px-4 rounded-lg transition-all mt-4
