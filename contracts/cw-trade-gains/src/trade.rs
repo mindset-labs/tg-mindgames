@@ -53,8 +53,8 @@ impl GameLifecycle for TradeGains {
                     let p1_reward = Uint128::from(p1_choice.0) * Uint128::from(10u128);
                     let p2_reward = Uint128::from(p2_choice.0) * Uint128::from(10u128);
 
-                    winnings.insert(reveals[0].0.clone(), p1_reward);
-                    winnings.insert(reveals[1].0.clone(), p2_reward);
+                    winnings.insert(reveals[0].0.clone(), winnings.get(&p1_reveal.0).unwrap() + p1_reward);
+                    winnings.insert(reveals[1].0.clone(), winnings.get(&p2_reveal.0).unwrap() + p2_reward);
                 }
                 // p1 revealed, p2 did not reveal, p1 gets 100
                 (Some(p1_reveal), None) => {

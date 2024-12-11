@@ -11,7 +11,6 @@ use cw_game_lifecycle::lifecycle::GameLifecycle;
 const CONTRACT_NAME: &str = "crates.io:cw-trade-gains";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
@@ -28,18 +27,20 @@ pub fn instantiate(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
-    _deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
-    _msg: ExecuteMsg,
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
-    unimplemented!()
+    match msg {
+        ExecuteMsg::Lifecycle(msg) => TradeGains::execute(deps, env, info, msg)
+            .map_err(ContractError::GameLifecycle),
+    }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
-    unimplemented!()
+pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        _ => TradeGains::query(deps, env, msg.into()),
+    }
 }
-
-#[cfg(test)]
-mod tests {}
