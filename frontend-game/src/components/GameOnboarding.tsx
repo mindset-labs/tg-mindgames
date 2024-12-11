@@ -175,6 +175,31 @@ export default function GameOnboarding({
     }
   };
 
+  const endGame = async () => {
+    console.log("Ending game:", { gameId });
+    try {
+      const tx = await client?.execute(
+        account?.bech32Address,
+        CONTRACTS.cwAsteroid,
+        {
+          lifecycle: {
+            end_game: { game_id: gameId },
+          },
+        },
+        {
+          amount: [{ amount: "1", denom: "uxion" }],
+          gas: "500000",
+          granter: TREASURY.treasury,
+        },
+        "",
+        []
+      );
+      console.log(tx);
+    } catch (error) {
+      console.error("Error ending game:", error);
+    }
+  };
+
   return (
     <div className="absolute inset-0 flex items-center justify-center">
       <div className="w-full max-h-full overflow-y-auto py-4 px-4 flex flex-col items-center">
@@ -264,8 +289,46 @@ export default function GameOnboarding({
                 )}
               </>
             ) : gameStatus === "rounds_finished" ? (
-              <div className="text-center text-white font-bold text-xl">
-                Game Completed!
+              <div className="flex flex-col items-center space-y-4">
+                <div className="text-center text-white font-bold text-xl">
+                  Game Completed!
+                </div>
+                <div className="w-full space-y-2">
+                  {console.log("Players:", gameDetails?.players)}
+                  {console.log("Round 0:", gameDetails?.rounds[0])}
+                  {console.log("Reveals:", gameDetails?.rounds[0]?.reveals)}
+                  {gameDetails?.players?.map((player, index) => {
+                    const playerScore = gameDetails?.rounds[0]?.reveals?.find(
+                      ([address]) => address === player[0]
+                    )?.[1];
+                    console.log("Player:", player, "Score:", playerScore);
+                    return (
+                      <div
+                        key={player[0]}
+                        className="flex justify-between items-center bg-white/10 p-3 rounded-lg"
+                      >
+                        <span className="text-white/90">
+                          Player {index + 1}
+                          {player[0] === account?.bech32Address ? " (You)" : ""}
+                          :
+                        </span>
+                        <span className="text-white font-bold">
+                          {typeof playerScore !== "undefined"
+                            ? playerScore
+                            : "Not revealed"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={endGame}
+                  className="w-full px-4 py-2.5 bg-gradient-to-r from-red-600 to-red-700 
+                           hover:from-red-500 hover:to-red-600 text-white rounded-lg 
+                           font-semibold transition-all active:scale-[0.98]"
+                >
+                  End Game
+                </button>
               </div>
             ) : null}
             {gameStatus === "pending" && (

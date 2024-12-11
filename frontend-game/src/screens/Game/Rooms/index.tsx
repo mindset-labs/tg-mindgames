@@ -14,6 +14,7 @@ export enum GameStatus {
   CREATED = "created",
   IN_PROGRESS = "in_progress",
   ENDED = "ended",
+  ROUNDS_FINISHED = "rounds_finished",
   READY = "ready",
 }
 
@@ -347,7 +348,8 @@ export const Rooms = () => {
                     )}
 
                     {(room.status === "ready" ||
-                      room.status === "in_progress") && (
+                      room.status === "in_progress" ||
+                      room.status === "rounds_finished") && (
                       <button
                         onClick={() =>
                           navigate(
