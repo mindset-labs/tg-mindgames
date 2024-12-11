@@ -390,6 +390,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw-asteroid"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-game-lifecycle",
+ "cw-multi-test",
+ "cw-ownable",
+ "cw-p2e",
+ "cw-storage-plus",
+ "cw-utils",
+ "cw2",
+ "cw20",
+ "cw20-base",
+ "hex",
+ "rand",
+ "schemars",
+ "serde",
+ "sha2",
+ "thiserror 2.0.3",
+]
+
+[[package]]
 name = "cw-cooperation-dilemma"
 version = "0.1.0"
 dependencies = [
