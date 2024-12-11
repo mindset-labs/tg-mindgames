@@ -14,6 +14,8 @@ import { ExecuteMsg, GameConfig } from "../../../../codegen/Lifecycle.types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import WebApp from "@twa-dev/sdk";
 import { useNavigate } from "react-router-dom";
+import Games from "../../../assets/games.png";
+import Create from "../../../assets/create-game.png";
 
 // You'll need to define this type based on your game data structure
 type Game = {
@@ -493,9 +495,12 @@ export const CreateGame = () => {
     <>
       <div className="pb-10 flex flex-col h-screen w-full bg-gradient-to-br from-[#160f28] via-[#1a1339] to-black animate-gradient">
         <div className="container mx-auto px-4 py-8 pb-24 overflow-y-auto flex-1">
-          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-8 text-center">
-            Available Games
-          </h1>
+          <img
+            className="h-23 w-auto rounded-2xl hover:scale-110 transition-all duration-500 
+                         shadow-xl hover:shadow-blue-500/20 animate-float mb-10"
+            src={Games}
+            alt="Mind Games Logo"
+          />
 
           {!isGameInProgress ? (
             <div>
