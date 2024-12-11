@@ -104,7 +104,7 @@ export const GameHome = () => {
               className="w-12 h-12 rounded-md"
             />
             <h1 className="text-4xl font-bold text-center justify-center text-white inline-flex items-center">
-              {"@" + telegramName ?? "Gamer"}
+              {telegramName != undefined ? "@" + telegramName : "Gamer"}
             </h1>
           </div>
 
