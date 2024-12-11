@@ -9,7 +9,7 @@ import CosmosLogo from "../../assets/cosmos-logo.png";
 import OsmosisLogo from "../../assets/osmosis-logo.png";
 import CoreumLogo from "../../assets/coreum-logo.png";
 import TwitterLogo from "../../assets/x-logo-white.png";
-
+import MindGames from "../../assets/mind-games.png";
 export const Settings = () => {
   const { logout } = useAbstraxionSigningClient();
   const { data: account } = useAbstraxionAccount();
@@ -57,6 +57,12 @@ export const Settings = () => {
       <div className="pb-10 flex flex-col h-screen w-full bg-gradient-to-br from-[#160f28] via-[#1a1339] to-black animate-gradient">
         <div className="flex-1 overflow-y-auto">
           <div className="container mx-auto px-4 py-8 pb-24">
+            <img
+              className="h-23 w-auto rounded-2xl hover:scale-110 transition-all duration-500 
+                         shadow-xl hover:shadow-blue-500/20 animate-float mb-10"
+              src={MindGames}
+              alt="Mind Games Logo"
+            />
             <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-8 text-center">
               Settings
             </h1>

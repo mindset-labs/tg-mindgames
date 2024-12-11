@@ -11,6 +11,7 @@ import { queryAllChainBalances } from "../../../helpers/Wallet/queryBalances";
 import { useEffect, useState } from "react";
 import XionLogo from "../../../assets/xion-logo.png";
 import MindGameLogo from "../../../assets/mind-games-logo.png";
+import Welcome from "../../../assets/welcome.png";
 
 export const GameHome = () => {
   const navigate = useNavigate();
@@ -88,13 +89,22 @@ export const GameHome = () => {
       <div className="pb-24 flex flex-col h-screen w-full bg-gradient-to-br from-[#160f28] via-[#1a1339] to-black animate-gradient">
         <main className="flex-1 container mx-auto px-4 py-8 mt-3 overflow-y-auto h-[calc(100vh-64px)] max-w-7xl">
           <div className="flex items-center justify-center gap-4 mb-8 whitespace-nowrap">
+            <h1 className=" text-white inline-flex items-center">
+              <img
+                src={Welcome}
+                alt="Welcome"
+                className="rounded-md inline-flex items-center"
+              />
+            </h1>
+          </div>
+          <div className="flex justify-center gap-4 mb-4 whitespace-nowrap">
             <img
               src={MindGameLogo}
               alt="Mind Game"
               className="w-12 h-12 rounded-md"
             />
-            <h1 className="text-4xl font-bold text-white inline-flex items-center">
-              Welcome, {telegramName ?? "Gamer"}
+            <h1 className="text-4xl font-bold text-center justify-center text-white inline-flex items-center">
+              {"@" + telegramName ?? "Gamer"}
             </h1>
           </div>
 
