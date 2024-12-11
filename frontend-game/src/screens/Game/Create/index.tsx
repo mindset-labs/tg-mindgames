@@ -72,6 +72,7 @@ export const CreateGame = () => {
       imageUrl: dilemma,
       minPlayers: 2,
       maxPlayers: 2,
+      url: "/tg-app/game/play/",
     },
     {
       id: "2",
@@ -266,6 +267,61 @@ export const CreateGame = () => {
     }
   };
 
+  const createAsteroidGame = async () => {
+    alert("createAsteroidGame");
+  };
+  const joinAsteroidGame = async () => {
+    alert("joinAsteroidGame");
+  };
+  const startAsteroidGame = async () => {
+    alert("startAsteroidGame");
+  };
+
+  const handleCreateGame = async () => {
+    if (!selectedGame) return;
+
+    switch (selectedGame.id) {
+      case "1": // Prisoner Dilemma
+        await createGame();
+        break;
+      case "2": // Space Invaders
+        await createAsteroidGame();
+        break;
+      default:
+        console.error("Unknown game type");
+    }
+  };
+
+  const handleJoinGame = async () => {
+    if (!selectedGame) return;
+
+    switch (selectedGame.id) {
+      case "1": // Prisoner Dilemma
+        await joinGame();
+        break;
+      case "2": // Space Invaders
+        await joinAsteroidGame();
+        break;
+      default:
+        console.error("Unknown game type");
+    }
+  };
+
+  const handleStartGame = async () => {
+    if (!selectedGame) return;
+
+    switch (selectedGame.id) {
+      case "1": // Prisoner Dilemma
+        await startGame();
+        break;
+      case "2": // Space Invaders
+        await startAsteroidGame();
+        break;
+      default:
+        console.error("Unknown game type");
+    }
+  };
+
   return (
     <>
       <div className="pb-10 flex flex-col h-screen w-full bg-gradient-to-br from-[#160f28] via-[#1a1339] to-black animate-gradient">
@@ -330,7 +386,7 @@ export const CreateGame = () => {
                   </div>
 
                   <button
-                    onClick={createGame}
+                    onClick={handleCreateGame}
                     disabled={isCreatingGame}
                     className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 
                            text-white font-bold py-3 px-4 rounded-lg transition-all
@@ -382,7 +438,7 @@ export const CreateGame = () => {
 
                     <div className="flex gap-4 mt-6">
                       <button
-                        onClick={joinGame}
+                        onClick={handleJoinGame}
                         disabled={isJoiningGame}
                         className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
                                text-white font-bold py-3 px-4 rounded-lg transition-all
@@ -458,7 +514,7 @@ export const CreateGame = () => {
 
                 {gameDetails?.players?.length === 2 && !isGameStarted && (
                   <button
-                    onClick={startGame}
+                    onClick={handleStartGame}
                     disabled={isStartingGame}
                     className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
                            text-white font-bold py-3 px-4 rounded-lg transition-all mt-4
