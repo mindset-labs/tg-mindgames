@@ -7,7 +7,7 @@ import {
   ShareIcon,
   RotateCcwIcon,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 interface GameResultProps {
   distance: number;
   highScore: number;
@@ -27,6 +27,8 @@ export default function GameResult({
   const isNewHighScore = distance > highScore;
 
   const navigate = useNavigate();
+
+  const { gameId } = useParams();
 
   return (
     <div className="absolute inset-0  flex flex-col items-center justify-center pb-24">
@@ -96,11 +98,11 @@ export default function GameResult({
         {/* Action Buttons */}
         <div className="flex flex-col gap-2">
           <button
-            onClick={() => navigate("/tg-app/game/rooms")}
+            onClick={onPlayAgain}
             className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg font-semibold transition-all active:scale-[0.98] flex items-center justify-center space-x-2"
           >
             <RotateCcwIcon className="w-5 h-5" />
-            <span>Get back to Rooms</span>
+            <span>Get back to Game</span>
           </button>
 
           {/* <button
