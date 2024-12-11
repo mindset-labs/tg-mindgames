@@ -4,6 +4,7 @@ use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult}
 // use cw2::set_contract_version;
 
 use crate::error::ContractError;
+use crate::lifecycle::GameLifecycle;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 /*
@@ -12,29 +13,33 @@ const CONTRACT_NAME: &str = "crates.io:cw-game-lifecycle";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 */
 
+// Base contract implementation which inherits the GameLifecycle trait and its default implementations
+pub struct BaseContract;
+impl GameLifecycle for BaseContract {}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
-    _deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
-    _msg: InstantiateMsg,
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    unimplemented!()
+    BaseContract::instantiate(deps, env, info, msg)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
-    _deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
-    _msg: ExecuteMsg,
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
-    unimplemented!()
+    BaseContract::execute(deps, env, info, msg)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
-    unimplemented!()
+pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    BaseContract::query(deps, env, msg)
 }
 
 #[cfg(test)]

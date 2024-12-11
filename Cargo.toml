@@ -10,9 +10,29 @@ homepage = "https://mindsetlabs.io"
 documentation = "https://mindsetlabs.io"
 rust-version = "1.78"
 
-#[profile.release.package.cw-cooperation]
-#codegen-units = 1
-#incremental = false
+[profile.release.package.cw-asteroid]
+codegen-units = 1
+incremental = false
+
+[profile.release.package.cw-cooperation-dilemma]
+codegen-units = 1
+incremental = false
+
+[profile.release.package.cw-public-goods]
+codegen-units = 1
+incremental = false
+
+[profile.release.package.cw-trade-gains]
+codegen-units = 1
+incremental = false
+
+[profile.release.package.cw-ultimatum]
+codegen-units = 1
+incremental = false
+
+[profile.release.package.cw-p2e]
+codegen-units = 1
+incremental = false
 
 [profile.release]
 rpath = false
@@ -34,7 +54,9 @@ serde = { version = "1.0.197", default-features = false, features = ["derive"] }
 cw-utils = { version = "2.0.0" }
 cw-storage-plus = "2.0.0"
 cw2 = "2.0.0"
-thiserror = { version = "1.0.58" }
+thiserror = { version = "2.0.3" }
 cw20 = { version = "2.0.0" }
 cw20-base = { version = "2.0.0", features = ["library"] }
 cw-ownable = { version = "2.1.0" }
+sha2 = { version = "0.10" }
+hex = { version = "0.4" }
