@@ -1,0 +1,16 @@
+{
+  "type": "module",
+  "main": "../dist/legacy/index.cjs",
+  "module": "../dist/legacy/index.js",
+  "types": "../dist/legacy/index.d.ts",
+  "exports": {
+    "import": {
+      "types": "../dist/legacy/index.d.ts",
+      "import": "../dist/legacy/index.js"
+    },
+    "require": {
+      "types": "../dist/legacy/index.d.cts",
+      "require": "../dist/legacy/index.cjs",
+    }
+  }
+}
