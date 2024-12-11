@@ -76,7 +76,7 @@ export const CreateGame = () => {
     },
     {
       id: "2",
-      title: "Space Invaders (Coming Soon)",
+      title: "Space Invaders",
       description:
         "Space Invaders is a classic arcade shooter where you defend Earth from waves of alien invaders. Use your laser cannon to blast the aliens out of the sky and avoid getting hit by their projectiles. As the game progresses, the aliens move faster and become more aggressive, making it increasingly challenging to survive. Can you save humanity from the alien threat?",
       imageUrl: spaceship,

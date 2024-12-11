@@ -16,6 +16,7 @@ export const Test = () => {
   const [incrementResult, setIncrementResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [counterValue, setCounterValue] = useState<number | null>(null);
+  const [isIncrementing, setIsIncrementing] = useState(false);
 
   const generateCoreumAddress = async () => {
     const address = await client?.getAccount("Osmosis");
@@ -59,6 +60,7 @@ export const Test = () => {
   }, [incrementResult]);
 
   async function incrementCounter() {
+    setIsIncrementing(true);
     const msg = {
       increment: {},
     };
@@ -82,6 +84,8 @@ export const Test = () => {
     } catch (error) {
       console.error(error);
       setError(error.message || "An error occurred");
+    } finally {
+      setIsIncrementing(false);
     }
   }
 
@@ -113,11 +117,19 @@ export const Test = () => {
 
           <button
             onClick={incrementCounter}
+            disabled={isIncrementing}
             className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 
                      text-white py-3 px-6 rounded-lg transition-all shadow-lg hover:shadow-purple-500/20
-                     border border-purple-400/30 font-medium"
+                     border border-purple-400/30 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Increment Counter
+            {isIncrementing ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin" />
+                <span>Processing...</span>
+              </div>
+            ) : (
+              "Increment Counter"
+            )}
           </button>
 
           {error && (
