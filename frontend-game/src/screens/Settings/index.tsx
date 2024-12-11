@@ -8,6 +8,7 @@ import XionLogo from "../../assets/xion-logo.png";
 import CosmosLogo from "../../assets/cosmos-logo.png";
 import OsmosisLogo from "../../assets/osmosis-logo.png";
 import CoreumLogo from "../../assets/coreum-logo.png";
+import TwitterLogo from "../../assets/x-logo-white.png";
 
 export const Settings = () => {
   const { logout } = useAbstraxionSigningClient();
@@ -164,9 +165,54 @@ export const Settings = () => {
                 <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-6">
                   About
                 </h2>
-                <div className="bg-[#160f28]/50 rounded-lg p-4">
+                <div className="bg-[#160f28]/50 rounded-lg p-4 space-y-2">
                   <p className="text-gray-300">
                     Version: <span className="text-white">1.0.0</span>
+                  </p>
+                  <p className="text-gray-300 flex items-center gap-2">
+                    <a
+                      href="https://x.com/helwan_mande"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:text-blue-300 transition-colors inline-flex items-center gap-1"
+                    >
+                      <img
+                        src={TwitterLogo}
+                        alt="Twitter"
+                        className="w-4 h-4"
+                      />
+                      @helwan_mande
+                    </a>
+                  </p>
+                  <p className="text-gray-300 flex items-center gap-2">
+                    <a
+                      href="https://x.com/mindbend0x"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:text-blue-300 transition-colors inline-flex items-center gap-1"
+                    >
+                      <img
+                        src={TwitterLogo}
+                        alt="Twitter"
+                        className="w-4 h-4"
+                      />
+                      @mindbend0x
+                    </a>
+                  </p>
+                  <p className="text-gray-300 flex items-center gap-2">
+                    <a
+                      href="https://x.com/mindsetlabsDAO"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:text-blue-300 transition-colors inline-flex items-center gap-1"
+                    >
+                      <img
+                        src={TwitterLogo}
+                        alt="Twitter"
+                        className="w-4 h-4"
+                      />
+                      @mindsetlabsDAO
+                    </a>
                   </p>
                 </div>
               </div>
