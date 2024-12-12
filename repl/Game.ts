@@ -52,7 +52,8 @@ export default class Game {
         return this.gameId
     }
 
-    async connect(gameId: number) {
+    async connect(gameType: GameType, gameId: number) {
+        this.gameType = gameType
         this.gameId = Number(gameId)
         await this.setGameClient()
     }

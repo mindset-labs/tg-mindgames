@@ -21,8 +21,10 @@ interface FeeOptions {
 }
 
 export type InstantiateP2EOptions = Partial<CWP2E.InstantiateMsg>
-export type InstantiateDilemmaOptions = Partial<Omit<CWDilemma.InstantiateMsg, 'token_contract'>> & {
-    token_contract: string // this is required
+export type InstantiateGameOptions = {
+    token_contract: string
+    base_url?: string
+    image_url?: string
 }
 
 /**
@@ -82,10 +84,10 @@ export async function instantiateP2E(
  * @param options - The options for the instantiation.
  * @returns The result of the instantiation.
  */
-export async function instantiateDilemma(
+export async function instantiateGameContract(
     replConnect: REPLConnect,
     codeId: number | string,
-    options: InstantiateDilemmaOptions,
+    options: InstantiateGameOptions,
 ): Promise<InstantiateResult> {
     replConnect.checkConnection()
     const accounts = await replConnect.wallet.getAccounts()
