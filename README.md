@@ -37,6 +37,8 @@ More game theory classics will be added, such as:
 
 ## Technical Architecture
 
+![](./images/architecture.png)
+
 ### Game Lifecycle
 
 The platform consists of:
@@ -52,13 +54,13 @@ All game moves and outcomes are recorded on-chain, ensuring complete transparenc
 
 The way the smart contracts are designed allows for easy addition of new games, as well as the ability to add new features to existing games. Following the architecture of a [GameLifecycle Trait](https://github.com/MindsetLabs/cw-game-lifecycle/src/lifecycle.rs) which holds a default implementation for all games, each game contract must implement the trait and can override the default implementation if needed.
 
-![](./docs/games.png)
+![](./images/games.png)
 
 Each game contract is set to be an authorized minter on the play-to-earn token contract (cw20 with some extensions) to enable issuance of rewards to players once a game ends.
 
 The GameLifecycle Trait implements a basic game state machine, which can be extended to support more complex game logic. The following diagram shows the basic state machine for the games implemented so far:
 
-![](./docs/lifecycle.png)
+![](./images/lifecycle.png)
 
 
 ### Xion Meta Accounts & Treasury
