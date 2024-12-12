@@ -153,6 +153,13 @@ const repl = program()
         command('game')
             .description('Interact with a game')
             .add(
+                command('debug')
+                    .description('Print the currentGame object in the REPL')
+                    .action(async (args) => {
+                        console.log('Current Game: ', currentGame)
+                    }),
+            )
+            .add(
                 command('connect')
                     .description('Connect to a game')
                     .option('game-type', { prompt: 'The type of game to connect to', type: 'string', choices: Object.values(GameType) })
@@ -212,7 +219,7 @@ const repl = program()
                 command('start')
                     .description('Start a game')
                     .action(async (args) => {
-                        if (!currentGame?.getGameId()) {
+                        if (!currentGame?.getGameId() && currentGame?.getGameId() !== 0) {
                             throw new Error('You must specifiy a game ID or join / create a game before you can get details')
                         }
 
@@ -225,7 +232,7 @@ const repl = program()
                     .description('Play a round in a game')
                     .option('choice', { prompt: 'The choice to play', type: 'string' })
                     .action(async (args) => {
-                        if (!currentGame?.getGameId()) {
+                        if (!currentGame?.getGameId() && currentGame?.getGameId() !== 0) {
                             throw new Error('You must specifiy a game ID or join / create a game before you can get details')
                         }
 
@@ -237,7 +244,7 @@ const repl = program()
                 command('reveal-round')
                     .description('Reveal a round in a game')
                     .action(async (args) => {
-                        if (!currentGame?.getGameId()) {
+                        if (!currentGame?.getGameId() && currentGame?.getGameId() !== 0) {
                             throw new Error('You must specifiy a game ID or join / create a game before you can get details')
                         }
 
@@ -249,7 +256,7 @@ const repl = program()
                 command('end-game')
                     .description('End game')
                     .action(async (args) => {
-                        if (!currentGame?.getGameId()) {
+                        if (!currentGame?.getGameId() && currentGame?.getGameId() !== 0) {
                             throw new Error('You must specifiy a game ID or join / create a game before you can get details')
                         }
 
