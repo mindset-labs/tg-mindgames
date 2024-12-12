@@ -8,7 +8,6 @@ import { TREASURY, CONTRACTS } from "../../constants/contracts";
 
 export const Test = () => {
   //Counter contract address
-  //const counterContractAddress = 'xion1suthl30z5jg7r5pxm9e2srjtms2p0ev9yen709yvmpg4el4ckw0qmd4xfk';
   const { client } = useAbstraxionSigningClient();
   const { data: account } = useAbstraxionAccount();
   const cw_counter_address = CONTRACTS.counterContract;

@@ -92,13 +92,13 @@ export const CreateGame = () => {
   const executeClient = new LifecycleClient(
     client as SigningCosmWasmClient,
     account?.bech32Address,
-    "xion17ep30wmgw7xqefagdlx7kz3t746q9rj5xy37tf7g9v68d9d7ncaskl3qrz"
+    CONTRACTS.cwLifeCycle
   );
 
   const contractQueryClient = new CwCooperationDilemmaClient(
     client as SigningCosmWasmClient,
     account?.bech32Address,
-    "xion1lp7xue46k9909xycngp5ms459hsldc5cqqquqw0an0g4qnsahm4snyczyx"
+    CONTRACTS.cwCooperationDilemma
   );
 
   const asteroidQueryClient = new LifecycleClient(

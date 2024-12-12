@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import XionLogo from "../../../assets/xion-logo.png";
 import MindGameLogo from "../../../assets/mind-games-logo.png";
 import Welcome from "../../../assets/welcome.png";
+import { CONTRACTS } from "../../../constants/contracts";
 
 export const GameHome = () => {
   const navigate = useNavigate();
@@ -27,8 +28,8 @@ export const GameHome = () => {
       }
       const queryClient = new CwCooperationDilemmaClient(
         client,
-        "xion1p6z52rfzkehhjm64cdd6396swzhqqj787u205kux06vr4uyp8lxqe5v8gr",
-        "xion1lp7xue46k9909xycngp5ms459hsldc5cqqquqw0an0g4qnsahm4snyczyx"
+        account?.bech32Address,
+        CONTRACTS.cwCooperationDilemma
       );
       return queryClient.getGamesCount();
     },
@@ -62,7 +63,7 @@ export const GameHome = () => {
       );
       //TODO: get minds balance from contract
       const mindsBalance = await client?.queryContractSmart(
-        "xion17ep30wmgw7xqefagdlx7kz3t746q9rj5xy37tf7g9v68d9d7ncaskl3qrz",
+        CONTRACTS.cwLifeCycle,
         {
           balance: {
             address: account.bech32Address,
