@@ -99,8 +99,9 @@ const repl = program()
                     .option('game-type', { prompt: 'The type of game to instantiate', type: 'string', choices: Object.values(GameType) })
                     .option('base-url', { prompt: 'Enter the base URL of the game', type: 'string', default: 'https://example.com' })
                     .option('image-url', { prompt: 'Enter the image URL of the game', type: 'string', default: 'https://example.com/image.png' })
+                    .option('code-id', { prompt: 'Enter the code ID of the contract to instantiate', type: 'number', optional: true })
                     .action(async (args) => {
-                        const codeId = getGameCodeId(args['game-type'] as GameType)
+                        const codeId = args['code-id'] || getGameCodeId(args['game-type'] as GameType)
                         const parsedMsg: InstantiateGameOptions = {
                             token_contract: args['p2e-contract']!,
                             base_url: args['base-url']!,
