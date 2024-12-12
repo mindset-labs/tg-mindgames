@@ -13,7 +13,6 @@ import VersusAnimation from "../../../components/VersusAnimation";
 import { CooperateIcon } from "../../../components/icons/CooperateIcon";
 import { DefectIcon } from "../../../components/icons/DefectIcon";
 import Confetti from "react-confetti";
-import useWindowSize from "react-use/lib/useWindowSize";
 
 const Play = () => {
   const navigate = useNavigate();
@@ -27,7 +26,6 @@ const Play = () => {
   const [nonce, setNonce] = useState<string>("");
   const [showVersusAnimation, setShowVersusAnimation] = useState(false);
   const [isGameEnded, setIsGameEnded] = useState(false);
-  const { width, height } = useWindowSize();
   const [showConfetti, setShowConfetti] = useState(false);
   const [isEndingGame, setIsEndingGame] = useState(false);
 
