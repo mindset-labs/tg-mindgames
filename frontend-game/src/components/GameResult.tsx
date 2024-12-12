@@ -66,7 +66,7 @@ export default function GameResult({
         </div>
 
         {/* Rewards Section */}
-        <div className="bg-indigo-950/50 backdrop-blur-sm rounded-xl p-4 border border-indigo-800/30 mb-8">
+        {/* <div className="bg-indigo-950/50 backdrop-blur-sm rounded-xl p-4 border border-indigo-800/30 mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <StarIcon className="w-5 h-5 text-yellow-400" />
@@ -93,13 +93,15 @@ export default function GameResult({
               </div>
             )}
           </div>
-        </div>
+        </div> */}
 
         {/* Action Buttons */}
         <div className="flex flex-col gap-2">
           <button
             onClick={onPlayAgain}
-            className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg font-semibold transition-all active:scale-[0.98] flex items-center justify-center space-x-2"
+            className="w-full bg-gradient-to-r hover:from-[#2adaff] hover:to-[#164af8] from-blue-600 to-[#164af8] transition-all shadow-lg shadow-[#2adaff]/20
+                               text-white font-bold py-3 px-4 rounded-2xl transition-all
+                           disabled:opacity-50 disabled:cursor-not-allowed] flex items-center justify-center space-x-2"
           >
             <RotateCcwIcon className="w-5 h-5" />
             <span>Get back to Game</span>
