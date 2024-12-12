@@ -7,6 +7,7 @@ import {
     InstantiateDilemmaOptions, instantiateP2E, InstantiateP2EOptions, uploadContract 
 } from './repl/commands'
 import Dilemma, { DilemmaChoice } from './repl/Dilemma'
+import Game, { GameType } from './repl/Game'
 
 dotenv.config()
 
@@ -15,10 +16,13 @@ const P2E_CODE_ID = parseInt(process.env.P2E_CODE_ID!)
 const P2E_CONTRACT_ADDRESS = process.env.P2E_CONTRACT_ADDRESS!
 const DILEMMA_CODE_ID = parseInt(process.env.DILEMMA_CODE_ID!)
 const DILEMMA_CONTRACT_ADDRESS = process.env.DILEMMA_CONTRACT_ADDRESS!
+const ROCK_PAPER_SCISSORS_CODE_ID = parseInt(process.env.ROCK_PAPER_SCISSORS_CODE_ID!)
+const ROCK_PAPER_SCISSORS_CONTRACT_ADDRESS = process.env.ROCK_PAPER_SCISSORS_CONTRACT_ADDRESS!
 const SIGNER_PRIVATE_KEY = process.env.SIGNER_PRIVATE_KEY!
 
 let replConnect: REPLConnect
-let currentGame: Dilemma | null = null
+let dilemmaGame: Dilemma | null = null
+let currentGame: Game | null = null
 
 const repl = program()
     .add(
@@ -74,6 +78,23 @@ const repl = program()
                         console.log(result)
                     }),
             )
+            // .add(
+            //     command('any-game')
+            //         .description('Instantiate a game contract')
+            //         .option('p2e-contract', { prompt: 'The play-to-earn contract address to use', type: 'string', default: P2E_CONTRACT_ADDRESS })
+            //         .option('code-id', { prompt: 'Enter the code ID of the contract to instantiate' })
+            //         .option('image-url', { prompt: 'Enter the image URL of the game', type: 'string', default: 'https://example.com/image.png' })
+            //         .option('base-url', { prompt: 'Enter the base URL of the game', type: 'string', default: 'https://example.com' })
+            //         .action(async (args) => {
+            //             const parsedMsg = {
+            //                 image_url: args['image-url']!,
+            //                 base_url: args['base-url']!,
+            //                 token_contract: args['p2e-contract']!,
+            //             }
+            //             const result = await instantiateAnyGame(replConnect, args['code-id'], parsedMsg)
+            //             console.log(result)
+            //         }),
+            // )
             .description('Instantiate a contract'),
     )
     .add(
@@ -121,8 +142,112 @@ const repl = program()
                     .description('Connect to a game')
                     .option('game-id', { prompt: 'The game ID to connect to', type: 'number' })
                     .action(async (args) => {
+                        if (!dilemmaGame) {
+                            dilemmaGame = new Dilemma(replConnect, DILEMMA_CONTRACT_ADDRESS)
+                        }
+                        await dilemmaGame.connect(args['game-id'])
+                        console.log('Connected to game', dilemmaGame.getGameId())
+                    }),
+            )
+            .add(
+                command('join')
+                    .description('Join a game')
+                    .option('game-id', { prompt: 'The game ID to join', type: 'number' })
+                    .option('telegram-id', { prompt: 'The telegram ID to use for the game', type: 'string' })
+                    .action(async (args) => {
+                        if (!dilemmaGame) {
+                            dilemmaGame = new Dilemma(replConnect, DILEMMA_CONTRACT_ADDRESS)
+                        }
+                        const result = await dilemmaGame.joinGame(args['game-id'], args['telegram-id']!)
+                        console.dir(result, { depth: null })
+                    }),
+            )
+            .add(
+                command('create')
+                    .description('Create a game')
+                    .option('telegram-id', { prompt: 'The telegram ID to use for the game', type: 'string' })
+                    .action(async (args) => {
+                        dilemmaGame = new Dilemma(replConnect, DILEMMA_CONTRACT_ADDRESS)
+                        const result = await dilemmaGame.createGame()
+                        const joinResult = await dilemmaGame.joinGame(null, args['telegram-id']!)
+                        console.dir(result, { depth: null })
+                        console.dir(joinResult, { depth: null })
+                    }),
+            )
+            .add(
+                command('details')
+                    .description('Get the details of the current game')
+                    .action(async (args) => {
+                        if (!dilemmaGame?.getGameId()) {
+                            throw new Error('You must specifiy a game ID or join / create a game before you can get details')
+                        }
+
+                        const result = await dilemmaGame.getGame()
+                        console.dir(result, { depth: null })
+                    }),
+            )
+            .add(
+                command('start')
+                    .description('Start a game')
+                    .action(async (args) => {
+                        if (!dilemmaGame?.getGameId()) {
+                            throw new Error('You must specifiy a game ID or join / create a game before you can get details')
+                        }
+
+                        const result = await dilemmaGame?.startGame()
+                        console.dir(result, { depth: null })
+                    }),
+            )
+            .add(
+                command('play-round')
+                    .description('Play a round in a game')
+                    .option('choice', { prompt: 'The choice to play', type: 'string' })
+                    .action(async (args) => {
+                        if (!dilemmaGame) {
+                            throw new Error('You must connect to a game before you can play a round')
+                        }
+
+                        const result = await dilemmaGame.commitRound(args['choice'] as DilemmaChoice)
+                        console.dir(result, { depth: null })
+                    }),
+            )
+            .add(
+                command('reveal-round')
+                    .description('Reveal a round in a game')
+                    .action(async (args) => {
+                        if (!dilemmaGame) {
+                            throw new Error('You must connect to a game before you can reveal a round')
+                        }
+
+                        const result = await dilemmaGame.revealRound()
+                        console.dir(result, { depth: null })
+                    }),
+            )
+            .add(
+                command('end-game')
+                    .description('End game')
+                    .action(async (args) => {
+                        if (!dilemmaGame) {
+                            throw new Error('You must connect to a game before you can reveal a round')
+                        }
+
+                        const result = await dilemmaGame.endGame()
+                        console.dir(result, { depth: null })
+                    }),
+            )
+    )
+    .add(
+        command('game')
+            .description('Interact with a game')
+            .add(
+                command('connect')
+                    .description('Connect to a game')
+                    .option('game-type', { prompt: 'The type of game to connect to', type: 'string', choices: Object.values(GameType) })
+                    .option('game-id', { prompt: 'The game ID to connect to', type: 'number' })
+                    .option('contract-address', { prompt: 'The contract address to connect to', type: 'string' })
+                    .action(async (args) => {
                         if (!currentGame) {
-                            currentGame = new Dilemma(replConnect, DILEMMA_CONTRACT_ADDRESS)
+                            currentGame = new Game(replConnect, args['contract-address']!, args['game-type'] as GameType)
                         }
                         await currentGame.connect(args['game-id'])
                         console.log('Connected to game', currentGame.getGameId())
@@ -133,9 +258,11 @@ const repl = program()
                     .description('Join a game')
                     .option('game-id', { prompt: 'The game ID to join', type: 'number' })
                     .option('telegram-id', { prompt: 'The telegram ID to use for the game', type: 'string' })
+                    .option('game-type', { prompt: 'The type of game to join', type: 'string', choices: Object.values(GameType) })
+                    .option('contract-address', { prompt: 'The contract address to connect to', type: 'string' })
                     .action(async (args) => {
                         if (!currentGame) {
-                            currentGame = new Dilemma(replConnect, DILEMMA_CONTRACT_ADDRESS)
+                            currentGame = new Game(replConnect, args['contract-address']!, args['game-type'] as GameType)
                         }
                         const result = await currentGame.joinGame(args['game-id'], args['telegram-id']!)
                         console.dir(result, { depth: null })
@@ -145,8 +272,10 @@ const repl = program()
                 command('create')
                     .description('Create a game')
                     .option('telegram-id', { prompt: 'The telegram ID to use for the game', type: 'string' })
+                    .option('game-type', { prompt: 'The type of game to create', type: 'string', choices: Object.values(GameType) })
+                    .option('contract-address', { prompt: 'The contract address to connect to', type: 'string' })
                     .action(async (args) => {
-                        currentGame = new Dilemma(replConnect, DILEMMA_CONTRACT_ADDRESS)
+                        currentGame = new Game(replConnect, args['contract-address']!, args['game-type'] as GameType)
                         const result = await currentGame.createGame()
                         const joinResult = await currentGame.joinGame(null, args['telegram-id']!)
                         console.dir(result, { depth: null })
@@ -157,11 +286,11 @@ const repl = program()
                 command('details')
                     .description('Get the details of the current game')
                     .action(async (args) => {
-                        if (!currentGame?.getGameId()) {
+                        if (!dilemmaGame?.getGameId()) {
                             throw new Error('You must specifiy a game ID or join / create a game before you can get details')
                         }
 
-                        const result = await currentGame.getGame()
+                        const result = await dilemmaGame.getGame()
                         console.dir(result, { depth: null })
                     }),
             )
@@ -182,11 +311,11 @@ const repl = program()
                     .description('Play a round in a game')
                     .option('choice', { prompt: 'The choice to play', type: 'string' })
                     .action(async (args) => {
-                        if (!currentGame) {
-                            throw new Error('You must connect to a game before you can play a round')
+                        if (!currentGame?.getGameId()) {
+                            throw new Error('You must specifiy a game ID or join / create a game before you can get details')
                         }
 
-                        const result = await currentGame.commitRound(args['choice'] as DilemmaChoice)
+                        const result = await currentGame?.commitRound(args['choice']!)
                         console.dir(result, { depth: null })
                     }),
             )
@@ -194,11 +323,11 @@ const repl = program()
                 command('reveal-round')
                     .description('Reveal a round in a game')
                     .action(async (args) => {
-                        if (!currentGame) {
-                            throw new Error('You must connect to a game before you can reveal a round')
+                        if (!currentGame?.getGameId()) {
+                            throw new Error('You must specifiy a game ID or join / create a game before you can get details')
                         }
 
-                        const result = await currentGame.revealRound()
+                        const result = await currentGame?.revealRound()
                         console.dir(result, { depth: null })
                     }),
             )
@@ -206,11 +335,11 @@ const repl = program()
                 command('end-game')
                     .description('End game')
                     .action(async (args) => {
-                        if (!currentGame) {
-                            throw new Error('You must connect to a game before you can reveal a round')
+                        if (!currentGame?.getGameId()) {
+                            throw new Error('You must specifiy a game ID or join / create a game before you can get details')
                         }
 
-                        const result = await currentGame.endGame()
+                        const result = await currentGame?.endGame()
                         console.dir(result, { depth: null })
                     }),
             )

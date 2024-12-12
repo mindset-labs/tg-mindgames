@@ -6,8 +6,8 @@
 
 import { CosmWasmClient, SigningCosmWasmClient, ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 import { Coin, StdFee } from "@cosmjs/amino";
-import { Addr, InstantiateMsg, ExecuteMsg, ExecuteMsg1, Uint128, GameConfig, QueryMsg, GameRoundStatus, GameRound, GameStatus, Game, Uint64, Leaderboard } from "./CwTradeGains.types";
-export interface CwTradeGainsReadOnlyInterface {
+import { Addr, InstantiateMsg, ExecuteMsg, ExecuteMsg1, Uint128, GameConfig, QueryMsg, GameRoundStatus, GameRound, GameStatus, Game, Uint64, Leaderboard } from "./CwRockPaperScissors.types";
+export interface CwRockPaperScissorsReadOnlyInterface {
   contractAddress: string;
   getGame: ({
     gameId
@@ -27,7 +27,7 @@ export interface CwTradeGainsReadOnlyInterface {
   }) => Promise<GameStatus>;
   getGamesCount: () => Promise<Uint64>;
 }
-export class CwTradeGainsQueryClient implements CwTradeGainsReadOnlyInterface {
+export class CwRockPaperScissorsQueryClient implements CwRockPaperScissorsReadOnlyInterface {
   client: CosmWasmClient;
   contractAddress: string;
   constructor(client: CosmWasmClient, contractAddress: string) {
@@ -83,12 +83,12 @@ export class CwTradeGainsQueryClient implements CwTradeGainsReadOnlyInterface {
     });
   };
 }
-export interface CwTradeGainsInterface extends CwTradeGainsReadOnlyInterface {
+export interface CwRockPaperScissorsInterface extends CwRockPaperScissorsReadOnlyInterface {
   contractAddress: string;
   sender: string;
   lifecycle: (executeMsg: ExecuteMsg, fee?: number | StdFee | "auto", memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
 }
-export class CwTradeGainsClient extends CwTradeGainsQueryClient implements CwTradeGainsInterface {
+export class CwRockPaperScissorsClient extends CwRockPaperScissorsQueryClient implements CwRockPaperScissorsInterface {
   client: SigningCosmWasmClient;
   sender: string;
   contractAddress: string;

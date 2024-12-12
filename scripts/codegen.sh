@@ -28,7 +28,7 @@ for contract in ./contracts/*/; do
         # Generate the typescript code
         echo "Generating typescript code for $(basename "$contract")..."
         (
-            ts-codegen generate \
+            npx ts-codegen generate \
                 --plugin client \
                 --plugin message-composer \
                 --schema "$contract/schema" \
@@ -48,7 +48,7 @@ for package in ./packages/*/; do
         # Generate the typescript code
         echo "Generating typescript code for $(basename "$package")..."
         (
-            ts-codegen generate \
+            npx ts-codegen generate \
                 --plugin client \
                 --plugin message-composer \
                 --schema "$package/schema" \
