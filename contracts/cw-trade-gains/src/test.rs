@@ -151,15 +151,15 @@ mod tests {
         let p2e_contract = p2e_token_code_id
             .instantiate(app, owner.clone(), "test", p2e_initial_balances)
             .unwrap();
-        let Trade_game_code_id = TradeGameCodeId::store_code(app);
-        let Trade_game_contract = Trade_game_code_id
+        let trade_game_code_id = TradeGameCodeId::store_code(app);
+        let trade_game_contract = trade_game_code_id
             .instantiate(app, owner.clone(), "test", &p2e_contract)
             .unwrap();
         // set allowance for the game contract to transfer tokens from the owner to players (for rewards)
-        let msg = cw_p2e::msg::ExecuteMsg::AuthorizeRewardsIssuer { address: Trade_game_contract.addr().to_string() };
+        let msg = cw_p2e::msg::ExecuteMsg::AuthorizeRewardsIssuer { address: trade_game_contract.addr().to_string() };
         app.execute_contract(owner.clone(), p2e_contract.addr(), &msg, &[]).unwrap();
 
-        (p2e_contract, Trade_game_contract)
+        (p2e_contract, trade_game_contract)
     }
 
     fn join_game(app: &mut App, game_contract: &TradeGameContract, p2e_contract: &P2ETokenContract, players: Vec<Addr>) {
@@ -189,8 +189,8 @@ mod tests {
         let p2e_contract = p2e_token_code_id
             .instantiate(&mut app, owner.clone(), "test", None)
             .unwrap();
-        let Trade_game_code_id = TradeGameCodeId::store_code(&mut app);
-        Trade_game_code_id
+        let trade_game_code_id = TradeGameCodeId::store_code(&mut app);
+        trade_game_code_id
             .instantiate(&mut app, owner.clone(), "test", &p2e_contract)
             .unwrap();
     }
@@ -198,7 +198,7 @@ mod tests {
     #[test]
     fn trade_contract_create_game() {
         let mut app = mock_app();
-        let (_p2e_contract, Trade_game_contract) = setup_contracts(&mut app, None);
+        let (_p2e_contract, trade_game_contract) = setup_contracts(&mut app, None);
         let p1 = app.api().addr_make(&"player_1".to_string());
 
         let msg =
@@ -207,19 +207,19 @@ mod tests {
             });
 
         app
-            .execute_contract(p1.clone(), Trade_game_contract.addr(), &msg, &[])
+            .execute_contract(p1.clone(), trade_game_contract.addr(), &msg, &[])
             .unwrap();
 
         let counter: u64 = app
             .wrap()
-            .query_wasm_smart(Trade_game_contract.addr(), &crate::msg::QueryMsg::GetGamesCount {})
+            .query_wasm_smart(trade_game_contract.addr(), &crate::msg::QueryMsg::GetGamesCount {})
             .unwrap();
 
         assert_eq!(counter, 1);
 
         let game: cw_game_lifecycle::state::Game = app
             .wrap()
-            .query_wasm_smart(Trade_game_contract.addr(), &crate::msg::QueryMsg::GetGame { game_id: 0 })
+            .query_wasm_smart(trade_game_contract.addr(), &crate::msg::QueryMsg::GetGame { game_id: 0 })
             .unwrap();
 
         assert_eq!(game.id, 0);
@@ -231,7 +231,7 @@ mod tests {
         let mut app = mock_app();
         let p1 = app.api().addr_make(&"player_1".to_string());
         let p2 = app.api().addr_make(&"player_2".to_string());
-        let (_p2e_contract, Trade_game_contract) = setup_contracts(
+        let (_p2e_contract, trade_game_contract) = setup_contracts(
             &mut app,
             Some(vec![
                 cw20::Cw20Coin {
@@ -252,7 +252,7 @@ mod tests {
 
         // player 1 creates the game
         app
-            .execute_contract(p1.clone(), Trade_game_contract.addr(), &msg, &[])
+            .execute_contract(p1.clone(), trade_game_contract.addr(), &msg, &[])
             .unwrap();
 
         // player 1 can join the game
@@ -261,7 +261,7 @@ mod tests {
             telegram_id: "1234567890".to_string(),
         });
         app
-            .execute_contract(p1.clone(), Trade_game_contract.addr(), &msg, &[])
+            .execute_contract(p1.clone(), trade_game_contract.addr(), &msg, &[])
             .unwrap();
 
         // player 2 can join the game
@@ -270,7 +270,7 @@ mod tests {
             telegram_id: "0987654321".to_string(),
         });
         app
-            .execute_contract(p2.clone(), Trade_game_contract.addr(), &msg, &[])
+            .execute_contract(p2.clone(), trade_game_contract.addr(), &msg, &[])
             .unwrap();
     }
 
@@ -279,7 +279,7 @@ mod tests {
         let mut app = mock_app();
         let p1 = app.api().addr_make(&"player_1".to_string());
         let p2 = app.api().addr_make(&"player_2".to_string());
-        let (p2e_contract, Trade_game_contract) = setup_contracts(
+        let (p2e_contract, trade_game_contract) = setup_contracts(
             &mut app,
             Some(vec![
                 cw20::Cw20Coin {
@@ -300,13 +300,13 @@ mod tests {
 
         // player 1 creates the game
         app
-            .execute_contract(p1.clone(), Trade_game_contract.addr(), &msg, &[])
+            .execute_contract(p1.clone(), trade_game_contract.addr(), &msg, &[])
             .unwrap();
 
         // player 1 and 2 increase allowance for the game contract to start joining the game
         // and pay the game joining fee
         let msg = cw_p2e::msg::ExecuteMsg::IncreaseAllowance {
-            spender: Trade_game_contract.addr().to_string(),
+            spender: trade_game_contract.addr().to_string(),
             amount: Uint128::new(1_000),
             expires: None,
         };
@@ -319,7 +319,7 @@ mod tests {
             telegram_id: "1234567890".to_string(),
         });
         app
-            .execute_contract(p1.clone(), Trade_game_contract.addr(), &msg, &[])
+            .execute_contract(p1.clone(), trade_game_contract.addr(), &msg, &[])
             .unwrap();
 
         // player 2 can join the game
@@ -328,7 +328,7 @@ mod tests {
             telegram_id: "0987654321".to_string(),
         });
         app
-            .execute_contract(p2.clone(), Trade_game_contract.addr(), &msg, &[])
+            .execute_contract(p2.clone(), trade_game_contract.addr(), &msg, &[])
             .unwrap();
 
         // check if balances are updated in the P2E contract
@@ -348,7 +348,7 @@ mod tests {
         let p1 = app.api().addr_make(&"player_1".to_string());
         let p2 = app.api().addr_make(&"player_2".to_string());
         let p3 = app.api().addr_make(&"player_3".to_string());
-        let (_p2e_contract, Trade_game_contract) = setup_contracts(&mut app, None);
+        let (_p2e_contract, trade_game_contract) = setup_contracts(&mut app, None);
 
         let mut config = cw_game_lifecycle::state::GameConfig::default();
         config.max_players = Some(2);
@@ -359,7 +359,7 @@ mod tests {
 
         // player 1 creates the game
         app
-            .execute_contract(p1.clone(), Trade_game_contract.addr(), &msg, &[])
+            .execute_contract(p1.clone(), trade_game_contract.addr(), &msg, &[])
             .unwrap();
 
         // player 1 can join the game
@@ -368,7 +368,7 @@ mod tests {
                 game_id: 0,
                 telegram_id: p.to_string(),
             });
-            app.execute_contract(p.clone(), Trade_game_contract.addr(), &msg, &[]).unwrap();
+            app.execute_contract(p.clone(), trade_game_contract.addr(), &msg, &[]).unwrap();
         });
 
         // player 3 cannot join the game
@@ -376,7 +376,7 @@ mod tests {
             game_id: 0,
             telegram_id: p3.to_string(),
         });
-        let res = app.execute_contract(p3.clone(), Trade_game_contract.addr(), &msg, &[]);
+        let res = app.execute_contract(p3.clone(), trade_game_contract.addr(), &msg, &[]);
         assert!(res.is_err());
     }
 

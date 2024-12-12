@@ -1,6 +1,6 @@
 use cosmwasm_schema::write_api;
 
-use cw_ultimatum::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use cw_rock_paper_scissors::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 fn main() {
     write_api! {

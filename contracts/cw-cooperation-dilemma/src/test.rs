@@ -553,12 +553,11 @@ mod tests {
                 .query_wasm_smart(cooperation_game_contract.addr(), &crate::msg::QueryMsg::GetGame { game_id: 0 })
                 .unwrap();
             
-            // assert that the round is incremented
-            assert_eq!(game_details.current_round, current_round + 1);
-            
             if current_round < 3 {
                 // if this is not the last round, the game should be in progress
                 assert_eq!(game_details.status, cw_game_lifecycle::state::GameStatus::InProgress);
+                // assert that the round is incremented
+                assert_eq!(game_details.current_round, current_round + 1);
             } else {
                 // if this is the last round, the game should be finished
                 assert_eq!(game_details.status, cw_game_lifecycle::state::GameStatus::RoundsFinished);
@@ -586,5 +585,12 @@ mod tests {
             address: p2.to_string(),
         }).unwrap();
         assert_eq!(balance.balance, Uint128::new(150));
+
+        let game_details: cw_game_lifecycle::state::Game = app
+            .wrap()
+            .query_wasm_smart(cooperation_game_contract.addr(), &crate::msg::QueryMsg::GetGame { game_id: 0 })
+            .unwrap();
+        assert_eq!(game_details.status, cw_game_lifecycle::state::GameStatus::Ended);
+        assert_eq!(game_details.current_round, 3);
     }
 }

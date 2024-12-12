@@ -511,6 +511,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw-rock-paper-scissors"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-game-lifecycle",
+ "cw-multi-test",
+ "cw-ownable",
+ "cw-p2e",
+ "cw-storage-plus",
+ "cw-utils",
+ "cw2",
+ "cw20",
+ "cw20-base",
+ "hex",
+ "schemars",
+ "serde",
+ "sha2",
+ "thiserror 2.0.3",
+]
+
+[[package]]
 name = "cw-storage-plus"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -540,25 +562,6 @@ dependencies = [
  "schemars",
  "serde",
  "sha2",
- "thiserror 2.0.3",
-]
-
-[[package]]
-name = "cw-ultimatum"
-version = "0.1.0"
-dependencies = [
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-game-lifecycle",
- "cw-multi-test",
- "cw-ownable",
- "cw-storage-plus",
- "cw-utils",
- "cw2",
- "cw20",
- "cw20-base",
- "schemars",
- "serde",
  "thiserror 2.0.3",
 ]
 
