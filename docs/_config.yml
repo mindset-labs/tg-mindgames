@@ -1,8 +1,8 @@
-title: Just the Docs Template
-description: A starter template for a Jeykll site using the Just the Docs theme!
+title: Mind Games
+description: A suite of on-chain games based on game theory with a play-to-earn token. Playable via Telegram and hosted on the Xion network.
 theme: just-the-docs
 
-url: https://just-the-docs.github.io
+url: https://mindgames.mindsetlabs.io
 
 aux_links:
   Template Repository: https://github.com/just-the-docs/just-the-docs-template
