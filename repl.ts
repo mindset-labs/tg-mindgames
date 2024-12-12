@@ -230,7 +230,7 @@ const repl = program()
             .add(
                 command('play-round')
                     .description('Play a round in a game')
-                    .option('choice', { prompt: 'The choice to play', type: 'string' })
+                    .option('choice', { prompt: 'The choice to play', type: 'string', choices: (currentGame || { getGameChoices: () => undefined }).getGameChoices() })
                     .action(async (args) => {
                         if (!currentGame?.getGameId() && currentGame?.getGameId() !== 0) {
                             throw new Error('You must specifiy a game ID or join / create a game before you can get details')

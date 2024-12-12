@@ -52,6 +52,21 @@ export default class Game {
         return this.gameId
     }
 
+    getGameType() {
+        return this.gameType
+    }
+
+    getGameChoices(): string[] {
+        switch (this.gameType) {
+            case GameType.DILEMMA:
+                return ['cooperate', 'defect']
+            case GameType.TRADE_GAINS:
+                return new Array(10).fill(0).map((_, i) => i.toString())
+            case GameType.ROCK_PAPER_SCISSORS:
+                return ['rock', 'paper', 'scissors']
+        }
+    }
+
     async connect(gameType: GameType, gameId: number) {
         this.gameType = gameType
         this.gameId = Number(gameId)
