@@ -1,5 +1,7 @@
 use std::borrow::Borrow;
+use std::cmp::Ordering;
 use std::collections::HashMap;
+use std::ops::Add;
 
 use cosmwasm_std::{
     to_json_binary, Addr, Binary, Deps, DepsMut, Env, Event, MessageInfo, Response, StdResult,
@@ -311,28 +313,49 @@ pub trait GameLifecycle {
             });
         }
 
+        // check if the player has already revealed
+        let player_existing_reveal = round
+            .reveals
+            .iter()
+            .find(|r| r.0 == info.sender)
+            .map(|r| r.1.clone());
+
+        if player_existing_reveal.is_some() {
+            return Err(ContractError::RoundAlreadyRevealed {
+                game_id,
+                round: game.current_round,
+            });
+        }
+
         // push the revealed value and optionally close the round
         round.reveals.push((info.sender.clone(), value));
 
         // if all players revealed or the round has expired, close the round
-        if round.reveals.len() >= game.players.len()
-            || round.expires_at.unwrap_or(u64::MAX) < env.block.height
+        if round.reveals.len().eq(&game.players.len())
+            || round.expires_at.unwrap_or(u64::MAX).lt(&env.block.height)
         {
             round.status = GameRoundStatus::Ended;
-            game.current_round += 1;
-            let round_expiry = match game.config.round_expiry_duration {
-                Some(block_duration) => Some(env.block.height + block_duration),
-                None => None,
-            };
-            game.rounds.push(GameRound::new(game.current_round, round_expiry));
-        }
 
-        // if all rounds are finished, set the game status to RoundsFinished
-        if game.current_round > game.config.max_rounds {
-            game.status = GameStatus::RoundsFinished;
-            events.push(
-                Event::new("game_rounds_finished").add_attribute("game_id", game_id.to_string()),
-            );
+            // if the current round is equal to the max rounds, set the game status to RoundsFinished
+            // otherwise prepare the next round
+            match game.current_round.cmp(&game.config.max_rounds) {
+                Ordering::Equal => {
+                    // all rounds are finished, set the game status to RoundsFinished
+                    game.status = GameStatus::RoundsFinished;
+                    events.push(
+                        Event::new("game_rounds_finished").add_attribute("game_id", game_id.to_string()),
+                    );
+                }
+                Ordering::Less => {
+                    game.current_round += 1;
+                    let round_expiry = match game.config.round_expiry_duration {
+                        Some(block_duration) => Some(env.block.height + block_duration),
+                        None => None,
+                    };
+                    game.rounds.push(GameRound::new(game.current_round, round_expiry));
+                }
+                _ => {}
+            }
         }
 
         GAMES.save(deps.storage, game_id, &game)?;

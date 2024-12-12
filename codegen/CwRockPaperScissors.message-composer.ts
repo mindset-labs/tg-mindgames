@@ -8,13 +8,13 @@ import { Coin } from "@cosmjs/amino";
 import { MsgExecuteContractEncodeObject } from "@cosmjs/cosmwasm-stargate";
 import { MsgExecuteContract } from "cosmjs-types/cosmwasm/wasm/v1/tx";
 import { toUtf8 } from "@cosmjs/encoding";
-import { Addr, InstantiateMsg, ExecuteMsg, ExecuteMsg1, Uint128, GameConfig, QueryMsg, GameRoundStatus, GameRound, GameStatus, Game, Uint64, Leaderboard } from "./CwTradeGains.types";
-export interface CwTradeGainsMsg {
+import { Addr, InstantiateMsg, ExecuteMsg, ExecuteMsg1, Uint128, GameConfig, QueryMsg, GameRoundStatus, GameRound, GameStatus, Game, Uint64, Leaderboard } from "./CwRockPaperScissors.types";
+export interface CwRockPaperScissorsMsg {
   contractAddress: string;
   sender: string;
   lifecycle: (executeMsg: ExecuteMsg, _funds?: Coin[]) => MsgExecuteContractEncodeObject;
 }
-export class CwTradeGainsMsgComposer implements CwTradeGainsMsg {
+export class CwRockPaperScissorsMsgComposer implements CwRockPaperScissorsMsg {
   sender: string;
   contractAddress: string;
   constructor(sender: string, contractAddress: string) {

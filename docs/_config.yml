@@ -1,0 +1,23 @@
+title: Mind Games
+description: A suite of on-chain games based on game theory with a play-to-earn token. Playable via Telegram and hosted on the Xion network.
+theme: just-the-docs
+
+url: https://mindset-labs.github.io/tg-mindgames
+
+heading_anchors: false
+color_scheme: dark
+favicon_ico: "/images/favicon.ico"
+# logo: "/images/tg-mindgames-logo.png"
+
+nav_external_links:
+  - title: View on Github
+    url: https://github.com/mindset-labs/tg-mindgames/tree/main
+    hide_icon: false
+    opens_in_new_tab: true
+  - title: Play on Telegram
+    url: ...
+    hide_icon: false
+    opens_in_new_tab: true
+
+# aux_links:
+#   Github: https://github.com/just-the-docs/just-the-docs-template
