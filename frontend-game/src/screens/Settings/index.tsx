@@ -58,12 +58,12 @@ export const Settings = () => {
         <div className="flex-1 overflow-y-auto">
           <div className="container mx-auto px-4 py-8 pb-24 flex flex-col items-center">
             <img
-              className="h-23 w-auto rounded-2xl hover:scale-110 transition-all duration-500 
-                         shadow-xl hover:shadow-blue-500/20 animate-float mb-10"
+              className="h-23 w-auto rounded-2xl  transition-all duration-500 
+                          hover:scale-110 transition-all duration-500 mb-10"
               src={MindGames}
               alt="Mind Games Logo"
             />
-            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-8 text-center">
+            <h1 className="text-4xl font-bold text-[#2adaff] mb-8 text-center">
               Settings
             </h1>
 
@@ -73,22 +73,21 @@ export const Settings = () => {
                 className="bg-[#1f1635]/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg 
                           border border-purple-500/10 hover:border-purple-500/20 transition-all"
               >
-                <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-6">
+                <h2 className="text-2xl font-bold text-[#2adaff] mb-6">
                   Account
                 </h2>
 
                 {account.bech32Address ? (
                   <>
                     <div className="bg-[#160f28]/50 rounded-lg p-4 mb-6">
-                      {/* <p className="text-gray-300 mb-2">Wallet Address:</p> */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 jusitify-center">
                         <div className="font-mono text-sm text-white break-all">
                           {account.bech32Address}
                         </div>
                         <button
                           onClick={copyAddress}
-                          className="shrink-0 p-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 
-                                   text-purple-400 transition-all"
+                          className="shrink-0 p-2 rounded-lg border border-[#2adaff] hover:bg-[#2adaff] hover:text-white 
+                                   text-[#2adaff] transition-all"
                         >
                           Copy
                         </button>

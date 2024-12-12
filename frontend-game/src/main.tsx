@@ -21,6 +21,7 @@ const config = {
     CONTRACTS.counterContract,
     CONTRACTS.cwCooperationDilemma,
     CONTRACTS.cwLifeCycle,
+    CONTRACTS.cwAsteroid,
   ],
 };
 

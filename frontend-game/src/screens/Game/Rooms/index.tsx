@@ -212,7 +212,7 @@ export const Rooms = () => {
       <div className="flex flex-col min-h-screen w-full bg-gradient-to-br from-[#160f28] via-[#1a1339] to-black animate-gradient">
         <Navigation />
         <div className="flex justify-center items-center flex-grow">
-          <div className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 text-2xl font-bold">
+          <div className="text-[#2adaff] text-2xl font-bold">
             Loading rooms...
           </div>
         </div>
@@ -239,8 +239,8 @@ export const Rooms = () => {
         <div className="flex-1 overflow-y-auto">
           <div className="flex flex-col items-center p-8">
             <img
-              className="h-23 w-auto rounded-2xl hover:scale-110 transition-all duration-500 
-                         shadow-xl hover:shadow-blue-500/20 animate-float mb-10"
+              className="h-23 w-auto rounded-2xl transition-all duration-500 
+                         hover:scale-110 transition-all duration-500 mb-10"
               src={RoomsLogo}
               alt="Mind Games Logo"
             />
@@ -250,10 +250,10 @@ export const Rooms = () => {
                 <div
                   key={room.id}
                   className="bg-[#1f1635]/80 backdrop-blur-sm rounded-2xl p-6 
-                         border border-purple-500/10 hover:border-purple-500/20 
-                         transition-all shadow-lg hover:shadow-purple-500/20"
+                         border border-purple-500/10 hover:border-[#2adaff]/20 
+                         transition-all shadow-lg hover:shadow-blue-500/20"
                 >
-                  <h2 className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-4">
+                  <h2 className="text-2xl font-semibold text-[#2adaff] mb-4">
                     Game #{room.id}
                   </h2>
                   <p className="text-gray-300 text-sm mb-4">{room.game_name}</p>
@@ -269,13 +269,13 @@ export const Rooms = () => {
 
                     {room.players.length > 0 && (
                       <div className="bg-[#160f28]/50 rounded-lg p-3 space-y-2">
-                        <p className="text-blue-400 font-semibold">
+                        <p className="text-[#2adaff] font-semibold">
                           Player Details:
                         </p>
                         {room.players.map(([address, telegramId], index) => (
                           <div
                             key={index}
-                            className="pl-3 border-l-2 border-purple-500/30 space-y-1"
+                            className="pl-3 border-l-2 border-pink-500/30 space-y-1"
                           >
                             {address && (
                               <p className="text-gray-300 text-sm">
@@ -326,14 +326,15 @@ export const Rooms = () => {
                     {room.status === GameStatus.CREATED && (
                       <div className="space-y-2 mt-4">
                         <button
+                          key={room.id}
                           onClick={() => joinGame(room.id, room.game_name)}
                           disabled={isJoiningGame}
                           className={`w-full ${
                             isJoiningGame
-                              ? "bg-gray-600 cursor-not-allowed"
-                              : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                          } text-white font-bold py-3 px-4 rounded-lg transition-all
-                        shadow-lg hover:shadow-green-500/20 border border-green-400/30`}
+                              ? "bg-gradient-to-r hover:from-[#2adaff] hover:to-[#164af8] from-blue-600 to-[#164af8] transition-all text-white font-bold py-3 px-4 rounded-2xl transition-all opacity-50"
+                              : "bg-gradient-to-r hover:from-[#2adaff] hover:to-[#164af8] from-blue-600 to-[#164af8] transition-all text-white font-bold py-3 px-4 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          } text-white font-bold py-3 px-4 transition-all
+                        `}
                         >
                           {isJoiningGame ? "Joining..." : "Join Game"}
                         </button>
@@ -352,8 +353,25 @@ export const Rooms = () => {
                     )}
 
                     {(room.status === "ready" ||
-                      room.status === "in_progress" ||
-                      room.status === "rounds_finished") && (
+                      room.status === "in_progress") && (
+                      <button
+                        key={room.id}
+                        onClick={() =>
+                          navigate(
+                            room.game_name === "Asteroid"
+                              ? `/tg-app/game/play/asteroid/${room.id}`
+                              : `/tg-app/game/play/${room.id}`
+                          )
+                        }
+                        className="w-full from-pink-500 via-red-500 to-yellow-500 bg-[length:_400%_400%] p-[3px] bg-gradient-to-r 
+                                     text-white font-bold py-3 px-4 rounded-2xl transition-all
+                                     shadow-lg shadow-[#2adaff]/20"
+                      >
+                        Play Game
+                      </button>
+                    )}
+
+                    {room.status === "rounds_finished" && (
                       <button
                         onClick={() =>
                           navigate(
@@ -362,11 +380,11 @@ export const Rooms = () => {
                               : `/tg-app/game/play/${room.id}`
                           )
                         }
-                        className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 
-                               text-white font-bold py-3 px-4 rounded-lg transition-all mt-4
-                               shadow-lg hover:shadow-purple-500/20 border border-purple-400/30"
+                        className="w-full border border-purple-500/10  p-[3px] bg-gradient-to-r 
+                                     text-white font-bold py-3 px-4 rounded-2xl transition-all
+                                     hover:border-pink-500 hover:shadow-purple-500/20"
                       >
-                        Play Game
+                        View Results
                       </button>
                     )}
                   </div>

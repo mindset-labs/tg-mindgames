@@ -89,7 +89,7 @@ export const GameHome = () => {
       <div className="pb-24 flex flex-col h-screen w-full bg-gradient-to-br from-[#160f28] via-[#1a1339] to-black animate-gradient">
         <main className="flex-1 container mx-auto px-4 py-8 mt-3 overflow-y-auto h-[calc(100vh-64px)] max-w-7xl">
           <div className="flex items-center justify-center gap-4 mb-8 whitespace-nowrap">
-            <h1 className=" text-white inline-flex items-center">
+            <h1 className=" text-white inline-flex items-center hover:scale-110 transition-all duration-500">
               <img
                 src={Welcome}
                 alt="Welcome"
@@ -110,7 +110,7 @@ export const GameHome = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <div className="bg-[#1f1635]/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-purple-500/10 hover:border-purple-500/20 transition-all">
-              <h2 className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-4">
+              <h2 className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#2adaff] to-[#164af8] mb-4">
                 Stats
               </h2>
               <div className="space-y-4">
@@ -127,7 +127,7 @@ export const GameHome = () => {
               className="bg-[#1f1635]/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg 
                             border border-purple-500/10 hover:border-purple-500/20 transition-all"
             >
-              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-6">
+              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#2adaff] to-[#164af8] mb-6">
                 My Tokens
               </h2>
               <div className="space-y-4">
@@ -162,15 +162,16 @@ export const GameHome = () => {
             </div>
 
             <div className="bg-[#1f1635]/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-purple-500/10 hover:border-purple-500/20 transition-all">
-              <h2 className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-4">
+              <h2 className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#2adaff] to-[#164af8] mb-4">
                 Tests
               </h2>
               <div className="space-y-4">
                 <button
                   onClick={() => navigate("/tg-app/test")}
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 
-                           text-white py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-purple-500/20
-                           border border-purple-400/30"
+                  className="w-full bg-gradient-to-r hover:from-[#2adaff] hover:to-[#164af8] from-blue-600 to-[#164af8] transition-all shadow-lg shadow-[#2adaff]/20
+                               text-white font-bold py-3 px-4 rounded-2xl transition-all
+                           disabled:opacity-50 disabled:cursor-not-allowed
+                         "
                 >
                   Cw_counter
                 </button>

@@ -8,3 +8,5 @@ export const CONTRACTS = {
   cwLifeCycle: "xion17ep30wmgw7xqefagdlx7kz3t746q9rj5xy37tf7g9v68d9d7ncaskl3qrz",
   cwAsteroid: "xion1ejxq96lcngc5gzq6n5mdeqhh9efhfm33ju3zu8hrfs5pye8d7dfsfnqg9q",
 } as const;
+
+// cosmwasm.wasm.v1.msgExecuteContract

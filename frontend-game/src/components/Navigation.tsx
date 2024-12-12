@@ -77,7 +77,7 @@ export default function Navigation() {
               {isActive(path) && (
                 <div
                   className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-8 sm:w-12 h-1 
-                              bg-gradient-to-r from-blue-400 to-purple-500 rounded-full"
+                              bg-[#2adaff] rounded-full"
                 />
               )}
             </button>

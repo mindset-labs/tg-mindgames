@@ -497,7 +497,7 @@ export const CreateGame = () => {
         <div className="container mx-auto px-4 py-8 pb-24 overflow-y-auto flex-1">
           <img
             className="h-23 w-auto rounded-2xl hover:scale-110 transition-all duration-500 
-                         shadow-xl hover:shadow-blue-500/20 animate-float mb-10"
+                          animate-float mb-10"
             src={Games}
             alt="Mind Games Logo"
           />
@@ -519,7 +519,7 @@ export const CreateGame = () => {
                         alt={game.title}
                         className="w-full h-48 object-cover rounded-xl mb-4 hover:scale-105 transition-transform duration-300"
                       />
-                      <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                      <h2 className="text-2xl font-bold text-[#2adaff]">
                         {game.title}
                       </h2>
                     </div>
@@ -532,7 +532,7 @@ export const CreateGame = () => {
                 >
                   <button
                     onClick={() => setSelectedGame(null)}
-                    className="text-blue-400 hover:text-blue-300 mb-4 hover:underline transition-colors flex items-center gap-2"
+                    className="text-[#2adaff] hover:text-400 mb-4 hover:underline transition-colors flex items-center gap-2"
                   >
                     <span>←</span> Back to games
                   </button>
@@ -542,7 +542,7 @@ export const CreateGame = () => {
                     alt={selectedGame.title}
                     className="w-full h-64 object-cover rounded-xl mb-6 hover:scale-105 transition-transform duration-300"
                   />
-                  <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-4">
+                  <h2 className="text-3xl font-bold text-[#2adaff] mb-4">
                     {selectedGame.title}
                   </h2>
                   <p className="text-gray-300 mb-6 leading-relaxed">
@@ -559,9 +559,8 @@ export const CreateGame = () => {
                   <button
                     onClick={handleCreateGame}
                     disabled={isCreatingGame}
-                    className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 
-                           text-white font-bold py-3 px-4 rounded-lg transition-all
-                           shadow-lg hover:shadow-purple-500/20 border border-purple-400/30
+                    className="w-full bg-gradient-to-r hover:from-[#2adaff] hover:to-[#164af8] from-blue-600 to-[#164af8] transition-all shadow-lg shadow-[#2adaff]/20
+                               text-white font-bold py-3 px-4 rounded-2xl transition-all
                            disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isCreatingGame ? "Creating..." : "Create Game"}
@@ -572,7 +571,7 @@ export const CreateGame = () => {
                   className="bg-[#1f1635]/80 backdrop-blur-sm rounded-2xl p-8 max-w-2xl mx-auto 
                             border border-purple-500/10 shadow-lg"
                 >
-                  <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-6">
+                  <h2 className="text-2xl font-bold text-[#2adaff] mb-6">
                     Game Created!
                   </h2>
                   <div className="space-y-4">
@@ -611,20 +610,11 @@ export const CreateGame = () => {
                       <button
                         onClick={handleJoinGame}
                         disabled={isJoiningGame}
-                        className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
-                               text-white font-bold py-3 px-4 rounded-lg transition-all
-                               shadow-lg hover:shadow-blue-500/20 border border-blue-400/30
-                               disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 bg-gradient-to-r hover:from-[#2adaff] hover:to-[#164af8] from-blue-600 to-[#164af8] transition-all shadow-lg shadow-[#2adaff]/20
+                               text-white font-bold py-3 px-4 rounded-2xl transition-all
+                           disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isJoiningGame ? "Joining..." : "Join Game"}
-                      </button>
-                      <button
-                        onClick={refreshGameData}
-                        className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 
-                               text-white font-bold py-3 px-4 rounded-lg transition-all
-                               shadow-lg hover:shadow-gray-500/20 border border-gray-400/30"
-                      >
-                        Refresh Data
                       </button>
                     </div>
 
@@ -642,9 +632,9 @@ export const CreateGame = () => {
                               : `/tg-app/game/play/${gameId}`
                           )
                         }
-                        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
-                               text-white font-bold py-3 px-4 rounded-lg transition-all
-                               shadow-lg hover:shadow-green-500/20 border border-green-400/30"
+                        className="w-full from-pink-500 via-red-500 to-yellow-500 bg-[length:_400%_400%] p-[3px] bg-gradient-to-r 
+                                     text-white font-bold py-3 px-4 rounded-2xl transition-all
+                                     shadow-lg shadow-[#2adaff]/20"
                       >
                         Play Game
                       </button>
@@ -697,7 +687,7 @@ export const CreateGame = () => {
                     onClick={handleStartGame}
                     disabled={isStartingGame}
                     className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
-                           text-white font-bold py-3 px-4 rounded-lg transition-all mt-4
+                           text-white font-bold py-3 px-4 rounded-2xl transition-all mt-4
                            shadow-lg hover:shadow-green-500/20 border border-green-400/30
                            disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -708,7 +698,7 @@ export const CreateGame = () => {
                 <button
                   onClick={() => setIsGameInProgress(false)}
                   className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 
-                         text-white font-bold py-3 px-4 rounded-lg transition-all
+                         text-white font-bold py-3 px-4 rounded-2xl transition-all
                          shadow-lg hover:shadow-red-500/20 border border-red-400/30"
                 >
                   End Game
