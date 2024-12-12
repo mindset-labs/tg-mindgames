@@ -56,4 +56,7 @@ pub enum ContractError {
 
     #[error("Invalid reveal choice")]
     InvalidRevealChoice { game_id: u64, round: u8 },
+
+    #[error("Round already revealed")]
+    RoundAlreadyRevealed { game_id: u64, round: u8 },
 }
