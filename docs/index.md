@@ -8,7 +8,7 @@ nav_order: 1
 
 A decentralized platform for playing classic game theory games via Telegram, powered by CosmWasm smart contracts on the Xion blockchain.
 
-![telegram-mindgames-preview](/images/tg-mindgames-preview.png)
+![telegram-mindgames-preview](https://mindset-labs.github.io/tg-mindgames/images/tg-mindgames-preview.png)
 
 ## Overview
 
