@@ -35,6 +35,8 @@ const getGameContractAddress = (gameType: GameType) => {
             return ROCK_PAPER_SCISSORS_CONTRACT_ADDRESS
         case GameType.TRADE_GAINS:
             return TRADE_GAINS_CONTRACT_ADDRESS
+        case GameType.ASTEROID:
+            return ASTEROID_CONTRACT_ADDRESS
         default:
             throw new Error(`Unknown game type ${gameType}`)
     }
