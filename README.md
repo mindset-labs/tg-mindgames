@@ -70,13 +70,6 @@ The Xion blockchain implements [Meta Accounts](https://docs.burnt.com/xion/devel
 
 The Xion treasury feature also allows for sponsored transactions such that users do not need to worry about paying for gas fees when playing the games.
 
-## Getting Started
-
-1. Find the bot on Telegram: @MindgamesBot
-2. ....
-3. ....
-
-Join us in exploring game theory through decentralized gameplay!
 
 ## Run locally
 
@@ -116,5 +109,4 @@ For each contract run:
 
 ```bash
 xiond tx wasm instantiate CODE_ID '{"base_url":"your_base_url_here","image_url":"your_image_url_here","token_contract": P2E_TOKEN_CONTRACT}' --label "contract_name" --gas-prices 0.025uxion --gas auto --gas-adjustment 1.3 -b block -y --no-admin --node https://rpc.xion-testnet-1.burnt.com:443 --chain-id xion-testnet-1 --from YOUR_ADDRESS
-
 ```
