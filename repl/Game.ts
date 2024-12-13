@@ -9,24 +9,29 @@ import * as TradeGainsClient from '../codegen/CwTradeGains.client'
 import * as TradeGainsTypes from '../codegen/CwTradeGains.types'
 import * as RockPaperScissorsClient from '../codegen/CwRockPaperScissors.client'
 import * as RockPaperScissorsTypes from '../codegen/CwRockPaperScissors.types'
+import * as AsteroidClient from '../codegen/CwAsteroid.client'
+import * as AsteroidTypes from '../codegen/CwAsteroid.types'
 
 export enum GameType {
     DILEMMA = 'dilemma',
     TRADE_GAINS = 'trade-gains',
     ROCK_PAPER_SCISSORS = 'rock-paper-scissors',
+    ASTEROID = 'asteroid',
 }
 
 export type GameConfig = {
     [GameType.DILEMMA]: DilemmaTypes.GameConfig,
     [GameType.TRADE_GAINS]: TradeGainsTypes.GameConfig,
     [GameType.ROCK_PAPER_SCISSORS]: RockPaperScissorsTypes.GameConfig,
+    [GameType.ASTEROID]: AsteroidTypes.GameConfig,
 }
 
 export default class Game {
     private gameClient!: 
         DilemmaClient.CwCooperationDilemmaClient | 
         TradeGainsClient.CwTradeGainsClient | 
-        RockPaperScissorsClient.CwRockPaperScissorsClient
+        RockPaperScissorsClient.CwRockPaperScissorsClient |
+        AsteroidClient.CwAsteroidClient
     private nonce = 0
     private choice: unknown | null = null
     private gameId: number | null = null
@@ -44,6 +49,9 @@ export default class Game {
                 break
             case GameType.ROCK_PAPER_SCISSORS:
                 this.gameClient = new RockPaperScissorsClient.CwRockPaperScissorsClient(this.replConnect.signingClient, accounts[0]!.address, this.gameContractAddress)
+                break
+            case GameType.ASTEROID:
+                this.gameClient = new AsteroidClient.CwAsteroidClient(this.replConnect.signingClient, accounts[0]!.address, this.gameContractAddress)
                 break
         }
     }
@@ -64,6 +72,8 @@ export default class Game {
                 return new Array(10).fill(0).map((_, i) => i.toString())
             case GameType.ROCK_PAPER_SCISSORS:
                 return ['rock', 'paper', 'scissors']
+            case GameType.ASTEROID:
+                return []
         }
     }
 

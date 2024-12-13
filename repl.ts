@@ -20,6 +20,8 @@ const ROCK_PAPER_SCISSORS_CODE_ID = parseInt(process.env.ROCK_PAPER_SCISSORS_COD
 const ROCK_PAPER_SCISSORS_CONTRACT_ADDRESS = process.env.ROCK_PAPER_SCISSORS_CONTRACT_ADDRESS!
 const TRADE_GAINS_CODE_ID = parseInt(process.env.TRADE_GAINS_CODE_ID! || '0')
 const TRADE_GAINS_CONTRACT_ADDRESS = process.env.TRADE_GAINS_CONTRACT_ADDRESS!
+const ASTEROID_CODE_ID = parseInt(process.env.ASTEROID_CODE_ID! || '0')
+const ASTEROID_CONTRACT_ADDRESS = process.env.ASTEROID_CONTRACT_ADDRESS!
 const SIGNER_PRIVATE_KEY = process.env.SIGNER_PRIVATE_KEY!
 
 let replConnect: REPLConnect
@@ -46,6 +48,8 @@ const getGameCodeId = (gameType: GameType) => {
             return ROCK_PAPER_SCISSORS_CODE_ID
         case GameType.TRADE_GAINS:
             return TRADE_GAINS_CODE_ID
+        case GameType.ASTEROID:
+            return ASTEROID_CODE_ID
         default:
             throw new Error(`Unknown game type ${gameType}`)
     }
