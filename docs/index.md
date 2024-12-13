@@ -39,7 +39,7 @@ Two players must simultaneously choose how much of a reward pool they want to cl
 
 Rewards are multiplied by 10 such that if a player claims 5 out of the 10 possible rewards, they receive 50 total reward tokens from the play-to-earn token contract.
 
-> Game Contract (Xion network): `-`
+> Game Contract (Xion network): `xion1svmey6ndpjlh0mdryk5lw6rzxczfe9d005q44mk4g2tfv6umcxmsek3ttt`
 
 The formal description of the game can be found [here](https://gtl.csa.iisc.ac.in/gametheory/ln/web-cp2-bargaining.pdf).
 
@@ -53,6 +53,16 @@ A simple game of rock, paper, scissors which follows the same classic rules that
 
 ---
 
+### Asteroid
+
+A simple game of asteroid mining.
+
+> Note: This game is not a game theory game, but a fun game to play so we added it to the platform and used the same [Game Lifecycle](/architecture.html) approach as the other games.
+
+> Game Contract (Xion network): `xion1fkpu38egjmdk2whhj8n5duc3m4p5csxgm46haeg5hsl89d2hws5smhctt9`
+
+---
+
 ### Future Games
 
 More game theory classics will be added, such as:
@@ -63,4 +73,3 @@ More game theory classics will be added, such as:
 - And many more...
 
 > We aim to implement as many games as possible from the known list of [game theory games](https://en.wikipedia.org/wiki/List_of_games_in_game_theory).
-
