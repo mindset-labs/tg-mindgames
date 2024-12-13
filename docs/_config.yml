@@ -11,11 +11,11 @@ favicon_ico: "/images/favicon.ico"
 
 nav_external_links:
   - title: View on Github
-    url: https://github.com/mindset-labs/tg-mindgames/tree/main
+    url: https://github.com/mindset-labs/tg-mindgames
     hide_icon: false
     opens_in_new_tab: true
   - title: Play on Telegram
-    url: ...
+    url: https://t.me/MindsetLabsBot
     hide_icon: false
     opens_in_new_tab: true
 
