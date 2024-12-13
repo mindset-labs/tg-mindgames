@@ -18,6 +18,8 @@ The platform consists of:
   - Move validation
   - Reward distribution
 - Integration with a play-to-earn token for rewards
+- Xion Meta Accounts integration for wallet-less transactions
+- Xion Treasury integration for gas-less transactions
 
 All game moves and outcomes are recorded on-chain, ensuring complete transparency and fairness.
 
