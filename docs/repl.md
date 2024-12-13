@@ -38,6 +38,9 @@ export DILEMMA_CONTRACT_ADDRESS='xion12cfz7k5a6hj744jdsj52r57dth4tlnggcfqdyw6620
 export ROCK_PAPER_SCISSORS_CODE_ID='1598'
 export ROCK_PAPER_SCISSORS_CONTRACT_ADDRESS='xion1gkdu9yqntqgf5ta4nucpmgqef4vskqkr63h8y9f4kdmeterdqnxqhle09c'
 export TRADE_GAINS_CODE_ID='1599'
+export TRADE_GAINS_CONTRACT_ADDRESS='xion1svmey6ndpjlh0mdryk5lw6rzxczfe9d005q44mk4g2tfv6umcxmsek3ttt'
+export ASTEROID_CODE_ID='1601'
+export ASTEROID_CONTRACT_ADDRESS='xion1fkpu38egjmdk2whhj8n5duc3m4p5csxgm46haeg5hsl89d2hws5smhctt9'
 export SIGNER_PRIVATE_KEY='....'
 ```
 
