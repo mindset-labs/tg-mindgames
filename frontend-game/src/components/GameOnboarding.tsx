@@ -151,7 +151,10 @@ export default function GameOnboarding({
     }
   };
 
+  const [isRevealDisabled, setIsRevealDisabled] = useState(false);
+
   const handleReveal = async () => {
+    setIsRevealDisabled(true);
     console.log("Revealing round:", { score, nonce });
     try {
       setIsRevealing(true);
@@ -432,10 +435,15 @@ export default function GameOnboarding({
                   ) : gameDetails?.rounds?.[0]?.commits?.length === 2 ? (
                     <button
                       onClick={handleReveal}
-                      disabled={isRevealing}
-                      className="mt-3 w-full bg-gradient-to-r hover:from-[#2adaff] hover:to-[#164af8] from-blue-600 to-[#164af8] transition-all shadow-lg shadow-[#2adaff]/20
+                      disabled={isRevealDisabled}
+                      className={`w-full  transition-all shadow-lg shadow-[#2adaff]/20
                                text-white font-bold py-3 px-4 rounded-2xl transition-all
-                           disabled:opacity-50 disabled:cursor-not-allowed"
+                           disabled:opacity-50 disabled:cursor-not-allowed 
+                           ${
+                             !isRevealDisabled
+                               ? "opacity-100 cursor-pointer bg-gradient-to-r hover:from-[#2adaff] hover:to-[#164af8] from-blue-600 to-[#164af8]"
+                               : "opacity-50 cursor-not-allowed bg-white/10"
+                           }`}
                     >
                       {isRevealing ? "Revealing..." : "Reveal Round"}
                     </button>
