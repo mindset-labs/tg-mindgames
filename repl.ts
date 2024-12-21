@@ -244,7 +244,7 @@ const repl = program()
                         }
 
                         const choices = currentGame?.getGameChoices()
-                        if (!choices.includes(args['choice']!)) {
+                        if (choices !== undefined && !choices.includes(args['choice']!)) {
                             throw new Error(`Invalid choice: ${args['choice']}. Valid choices are: ${choices.join(', ')}`)
                         }
 

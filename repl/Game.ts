@@ -64,7 +64,7 @@ export default class Game {
         return this.gameType
     }
 
-    getGameChoices(): string[] {
+    getGameChoices(): string[] | undefined {
         switch (this.gameType) {
             case GameType.DILEMMA:
                 return ['cooperate', 'defect']
@@ -73,7 +73,7 @@ export default class Game {
             case GameType.ROCK_PAPER_SCISSORS:
                 return ['rock', 'paper', 'scissors']
             case GameType.ASTEROID:
-                return []
+                return undefined
         }
     }
 
