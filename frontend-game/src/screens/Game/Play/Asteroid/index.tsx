@@ -78,7 +78,11 @@ export default function PlayAsteroid() {
 
   const dispatch = useAppDispatch();
 
+  const [hasPlayedGame, setHasPlayedGame] = useState(false);
+
   const handleCommitScore = async (score: number) => {
+    setHasPlayedGame(true);
+
     dispatch(setScore(score.toString()));
 
     if (!client || !account?.bech32Address) return;
@@ -138,6 +142,8 @@ export default function PlayAsteroid() {
     } finally {
       setIsSubmittingChoice(false);
     }
+
+    setHasPlayedGame(true);
   };
 
   const handleReturnToOnboarding = () => {
@@ -420,6 +426,7 @@ export default function PlayAsteroid() {
               onStart={resetGame}
               options={gameOptions}
               onOptionsChange={setGameOptions}
+              isPlayDisabled={hasPlayedGame}
             />
           </div>
         )}

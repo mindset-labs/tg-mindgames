@@ -40,6 +40,7 @@ interface GameOnboardingProps {
   options: GameSetupOptions;
   onOptionsChange: (options: GameSetupOptions) => void;
   gameId?: number;
+  isPlayDisabled: boolean;
 }
 
 interface GameResult {
@@ -52,6 +53,7 @@ export default function GameOnboarding({
   options,
   onOptionsChange,
   gameId: propGameId,
+  isPlayDisabled,
 }: GameOnboardingProps) {
   const { gameId: urlGameId } = useParams();
   const gameId = propGameId || Number(urlGameId);
@@ -446,9 +448,15 @@ export default function GameOnboarding({
                   ) : (
                     <button
                       onClick={onStart}
-                      className="w-full bg-gradient-to-r hover:from-[#2adaff] hover:to-[#164af8] from-blue-600 to-[#164af8] transition-all shadow-lg shadow-[#2adaff]/20
+                      disabled={isPlayDisabled}
+                      className={`w-full  transition-all shadow-lg shadow-[#2adaff]/20
                                text-white font-bold py-3 px-4 rounded-2xl transition-all
-                           disabled:opacity-50 disabled:cursor-not-allowed"
+                           disabled:opacity-50 disabled:cursor-not-allowed 
+                           ${
+                             !isPlayDisabled
+                               ? "opacity-100 cursor-pointer bg-gradient-to-r hover:from-[#2adaff] hover:to-[#164af8] from-blue-600 to-[#164af8]"
+                               : "opacity-50 cursor-not-allowed bg-white/10"
+                           }`}
                     >
                       Play!
                     </button>
