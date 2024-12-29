@@ -1,10 +1,10 @@
-use crate::state::COUNT;
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult}; // use cw2::set_contract_version;
+use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult}; // use cw2::set_contract_version;
 
+use crate::state::{ADMIN, COUNT};
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg};
 
 /*
 // version info for migration info
@@ -14,91 +14,67 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
-    _deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
-    _msg: InstantiateMsg,
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    COUNT.save(_deps.storage, &0)?;
+    COUNT.save(deps.storage, &0)?;
+    
+    let contract_info = deps.querier.query_wasm_contract_info(env.contract.address)?;
+    if let Some(admin) = contract_info.admin {
+        ADMIN.save(deps.storage, &admin.to_string())?;
+    }
+
     Ok(Response::new().add_attribute("action", "instantiate"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
-    _deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
-    _msg: ExecuteMsg,
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
-    match _msg {
-        ExecuteMsg::Increment {} => increment(_deps),
+    match msg {
+        ExecuteMsg::Increment {} => increment(deps),
+        ExecuteMsg::Reset { count } => reset(deps, env, info, count),
     }
 }
 
-pub fn increment(_deps: DepsMut) -> Result<Response, ContractError> {
-    let count = COUNT.load(_deps.storage)?;
-    COUNT.save(_deps.storage, &(count + 1))?;
+pub fn increment(deps: DepsMut) -> Result<Response, ContractError> {
+    let count = COUNT.load(deps.storage)?;
+    COUNT.save(deps.storage, &(count + 1))?;
     Ok(Response::new().add_attribute("action", "increment"))
 }
 
+pub fn reset(deps: DepsMut, env: Env, info: MessageInfo, count: u64) -> Result<Response, ContractError> {
+    let admin = ADMIN.load(deps.storage);
+    match admin {
+        Ok(admin) => {
+            if info.sender.to_string() != admin {
+                return Err(ContractError::Unauthorized {
+                    admin: admin.to_string(),
+                    sender: info.sender.to_string(),
+                });
+            }
+        }
+        // no admin set, so we don't need to check
+        Err(_) => {}
+    }
+
+    COUNT.save(deps.storage, &count)?;
+    Ok(Response::new().add_attribute("action", "reset"))
+}
+
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
-    match _msg {
-        QueryMsg::GetCount {} => get_count(_deps),
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg::GetCount {} => get_count(deps),
     }
 }
 
-pub fn get_count(_deps: Deps) -> StdResult<Binary> {
-    let count = COUNT.load(_deps.storage)?;
-    to_binary(&count)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::{coins, from_binary};
-
-    #[test]
-    fn test_instantiate() {
-        let mut deps = mock_dependencies();
-        let msg = InstantiateMsg {};
-        let info = mock_info("creator", &coins(1000, "ucosm"));
-        let res = super::instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
-        assert_eq!(res.attributes.len(), 1);
-        assert_eq!(res.attributes[0].key, "action");
-        assert_eq!(res.attributes[0].value, "instantiate");
-    }
-
-    #[test]
-    fn get_count() {
-        let mut deps = mock_dependencies();
-
-        // First initialize the contract to set the initial count
-        let init_msg = InstantiateMsg {};
-        let info = mock_info("creator", &coins(1000, "ucosm"));
-        instantiate(deps.as_mut(), mock_env(), info, init_msg).unwrap();
-
-        // Then query the count
-        let msg = QueryMsg::GetCount {};
-        let res = query(deps.as_ref(), mock_env(), msg).unwrap();
-        let count: u64 = from_binary(&res).unwrap();
-        assert_eq!(count, 0);
-    }
-
-    #[test]
-    fn test_increment() {
-        let mut deps = mock_dependencies();
-        let init_msg = InstantiateMsg {};
-        let info = mock_info("creator", &coins(1000, "ucosm"));
-        instantiate(deps.as_mut(), mock_env(), info.clone(), init_msg).unwrap();
-
-        let msg = ExecuteMsg::Increment {};
-        execute(deps.as_mut(), mock_env(), info, msg).unwrap();
-
-        let msg = QueryMsg::GetCount {};
-        let res = query(deps.as_ref(), mock_env(), msg).unwrap();
-        let count: u64 = from_binary(&res).unwrap();
-        assert_eq!(count, 1);
-    }
+pub fn get_count(deps: Deps) -> StdResult<Binary> {
+    let count = COUNT.load(deps.storage)?;
+    to_json_binary(&GetCountResponse { count })
 }
